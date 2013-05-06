@@ -1,0 +1,14 @@
+.cache
+.settings/org.scala-ide.sdt.core.prefs
+.classpath
+.project
+bin
+dev.en
+dev.es
+dev.key
+eval_alignment.py
+corpus.en
+corpus.es
+test.en
+test.es
+submit.py
