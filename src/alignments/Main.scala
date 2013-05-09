@@ -20,17 +20,14 @@ object Main {
 
     val startEm = Platform.currentTime
 
+    // TODO make classes: MachineTranslator, IbmModel1, IbmModel2
+
     // TODO move EM algorithm into separate method
 
-    // TODO find a prettier way to do this
-    val temp = collection.mutable.Set[(String, String)]()
-    t foreach {
+    val temp = t.map {
       case (word1, map) =>
-        map foreach {
-          case (word2, _) =>
-            temp += (word1 -> word2)
-        }
-    }
+        map.foldLeft(List[(String, String)]()) { case (list, (word2, _)) => (word1, word2) +: list }
+    } flatten
 
     println("also number of f|e combinations in t:" + temp.size)
 
