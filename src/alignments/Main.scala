@@ -10,6 +10,12 @@ object Main {
 
   def main(args: Array[String]) {
 
+    /*
+    val out = new java.io.FileWriter("dev.out")
+    out.write("hey")
+    out.close()
+    System.exit(0)
+    */
     val start = Platform.currentTime
 
     val n = getN()
@@ -19,7 +25,7 @@ object Main {
     println("number of f|e combinations in t:" + t.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
 
     val startEm = Platform.currentTime
-    
+
     // TODO refactor code using method to concurrently loop through files
     // TODO move EM algorithm into separate method
 
@@ -46,7 +52,7 @@ object Main {
       val c2 = collection.mutable.Map[(String, String), Double]()
 
       for (((line1, line2), index) <- lang1Lines zip lang2Lines zipWithIndex) {
-        println("line#:" + (index + 1))
+        if ((index+1) % 200 == 0) println("line#:" + (index + 1))
         if (!line1.trim.isEmpty && !line2.trim.isEmpty) {
 
           line2 split " " foreach { word2 =>
@@ -78,6 +84,28 @@ object Main {
 
     println("Total time=" + (end - start) / 1000.0 + "s")
     println("EM time=" + (end - startEm) / 1000.0 + "s")
+
+    // Writing dev alignments out
+    val lang1Lines = Source.fromFile("dev.en", "utf-8").getLines
+    val lang2Lines = Source.fromFile("dev.es", "utf-8").getLines
+
+    val outputFile = new java.io.FileWriter("dev.out")
+
+    for (((line1, line2), index) <- lang1Lines zip lang2Lines zipWithIndex) {
+      if ((index+1) % 200 == 0) println("line#:" + (index + 1))
+      if (!line1.trim.isEmpty && !line2.trim.isEmpty) {
+
+        for ((word2, index2) <- line2 split " " zipWithIndex) {
+
+          val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy { case (word1, index1) => t(word1)(word2) }
+          outputFile.write((index + 1) + " " + maxIndex + " " + index2 + "\n")
+
+        }
+
+      }
+    }
+
+    outputFile.close()
 
   }
 
@@ -111,7 +139,7 @@ object Main {
     val transParamEst = new TranslationParamEstimator
 
     for (((line1, line2), index) <- lang1Lines zip lang2Lines zipWithIndex) {
-      println("line#:" + (index + 1))
+      if ((index+1) % 200 == 0) println("line#:" + (index + 1))
       if (!line1.trim.isEmpty && !line2.trim.isEmpty) {
         (line1 split " ") :+ NULL foreach (word1 =>
           line2 split " " foreach (word2 =>
