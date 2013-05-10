@@ -57,11 +57,11 @@ class IbmModel1(initialTranslationParams: collection.mutable.Map[String, collect
 
   }
 
-  def writeAlignments(outputFilePath: String) {
+  def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
 
     val outputFile = new java.io.FileWriter(outputFilePath)
 
-    loopThroughFiles("dev.en", "dev.es")((line1: String, line2: String, index: Int) => {
+    loopThroughFiles(input1FilePath, input2FilePath)((line1: String, line2: String, index: Int) => {
 
       for ((word2, index2) <- line2 split " " zipWithIndex) {
 

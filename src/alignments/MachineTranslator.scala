@@ -7,7 +7,7 @@ class MachineTranslator {
   def initialize(lang1FilePath: String, lang2FilePath: String) {
 
     val n = getN(lang1FilePath, lang2FilePath)
-    val translationParams = getInitialTranslationParams(n)
+    val translationParams = getInitialTranslationParams(lang1FilePath, lang2FilePath, n)
 
     println("number of lang1 words in translationParams:" + translationParams.size)
     println("number of lang2|lang1 combinations in translationParams:" +
@@ -15,7 +15,7 @@ class MachineTranslator {
 
     val ibm1 = new IbmModel1(translationParams)
     ibm1.initialize(lang1FilePath, lang2FilePath, 5)
-    ibm1.writeAlignments("dev.out")
+    ibm1.writeAlignments("test.en", "test.es", "test.out")
 
   }
 
@@ -36,12 +36,13 @@ class MachineTranslator {
     n
   }
 
-  def getInitialTranslationParams(n: collection.mutable.Map[String, collection.mutable.Set[String]]) = {
+  def getInitialTranslationParams(lang1FilePath: String, lang2FilePath: String,
+    n: collection.mutable.Map[String, collection.mutable.Set[String]]) = {
 
     val translationParams = collection.mutable.Map[String, collection.mutable.Map[String, Double]]()
     val transParamEst = new TranslationParamEstimator
 
-    loopThroughFiles("corpus.en", "corpus.es")((line1: String, line2: String, index: Int) => {
+    loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
       (line1 split " ") :+ NULL foreach (word1 =>
         line2 split " " foreach (word2 =>
