@@ -65,7 +65,9 @@ class IbmModel1(initialTranslationParams: collection.mutable.Map[String, collect
 
       for ((word2, index2) <- line2 split " " zipWithIndex) {
 
-        val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy { case (word1, index1) => translationParams(word1)(word2) }
+        val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
+          case (word1, index1) => translationParams(word1)(word2)
+        }
         outputFile.write((index + 1) + " " + maxIndex + " " + index2 + "\n")
 
       }

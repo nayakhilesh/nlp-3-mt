@@ -23,6 +23,8 @@ class MachineTranslator {
 
     val n = collection.mutable.Map[String, collection.mutable.Set[String]]()
 
+    println("Initializing 'n':")
+
     loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
       (line1 split " ") :+ NULL foreach (word1 =>
@@ -33,6 +35,8 @@ class MachineTranslator {
 
     })
 
+    println("Done Initializing 'n'")
+
     n
   }
 
@@ -42,6 +46,8 @@ class MachineTranslator {
     val translationParams = collection.mutable.Map[String, collection.mutable.Map[String, Double]]()
     val transParamEst = new TranslationParamEstimator
 
+    println("Initializing translationParams:")
+
     loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
       (line1 split " ") :+ NULL foreach (word1 =>
@@ -49,9 +55,11 @@ class MachineTranslator {
           if (translationParams.contains(word1))
             translationParams(word1) += (word2 -> transParamEst.estimate(word2, word1, n))
           else
-            translationParams(word1) = collection.mutable.Map[String, Double](word2 -> transParamEst.estimate(word2, word1, n))))
+            translationParams(word1) = collection.mutable.Map(word2 -> transParamEst.estimate(word2, word1, n))))
 
     })
+
+    println("Done Initializing translationParams")
 
     translationParams
   }
