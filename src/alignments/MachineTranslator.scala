@@ -63,6 +63,26 @@ class MachineTranslator {
 
     translationParams
   }
+  
+  def getInitialAlignmentParams(lang1FilePath: String, lang2FilePath: String) = {
+
+    val alignmentParams = collection.mutable.Map[String, Double]()
+    
+    println("Initializing alignmentParams:")
+
+    loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
+
+      (line1 split " ") :+ NULL foreach (word1 =>
+        line2 split " " foreach (word2 => 0
+          
+          
+          )
+
+    )})
+
+    println("Done Initializing alignmentParams")
+ 
+  }
 
 }
 
