@@ -28,8 +28,8 @@ class IbmModel1(initialTranslationParams: collection.mutable.Map[String, collect
 
         line2 split " " foreach { word2 =>
 
-          val denom = ((line1 split " ") :+ NULL).foldLeft(0.0)((acc, word1) => acc + translationParams(word1)(word2))
-          (line1 split " ") :+ NULL foreach { word1 =>
+          val denom = (NULL +: (line1 split " ")).foldLeft(0.0)((acc, word1) => acc + translationParams(word1)(word2))
+          NULL +: (line1 split " ") foreach { word1 =>
             val delta = translationParams(word1)(word2) / denom
             c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
             c1(word1) = c1.getOrElse(word1, 0.0) + delta
@@ -68,7 +68,7 @@ class IbmModel1(initialTranslationParams: collection.mutable.Map[String, collect
         val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
           case (word1, index1) => translationParams(word1)(word2)
         }
-        outputFile.write((index + 1) + " " + maxIndex + " " + index2 + "\n")
+        outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
 
       }
 

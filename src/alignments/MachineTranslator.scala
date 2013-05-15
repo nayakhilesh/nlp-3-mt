@@ -15,7 +15,15 @@ class MachineTranslator {
 
     val ibm1 = new IbmModel1(translationParams)
     ibm1.initialize(lang1FilePath, lang2FilePath, 5)
-    ibm1.writeAlignments("test.en", "test.es", "test.out")
+    ibm1.writeAlignments("dev.en", "dev.es", "dev.model1.out")
+
+    val alignmentParams = getInitialAlignmentParams(lang1FilePath, lang2FilePath)
+
+    println("number of 4-tuples in alignmentParams:" + alignmentParams.size)
+
+    val ibm2 = new IbmModel2(translationParams, alignmentParams)
+    ibm2.initialize(lang1FilePath, lang2FilePath, 5)
+    ibm2.writeAlignments("dev.en", "dev.es", "dev.model2.out")
 
   }
 
@@ -27,7 +35,7 @@ class MachineTranslator {
 
     loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
-      (line1 split " ") :+ NULL foreach (word1 =>
+      NULL +: (line1 split " ") foreach (word1 =>
         if (n.contains(word1))
           n(word1) ++= line2.split(" ")
         else
@@ -50,7 +58,7 @@ class MachineTranslator {
 
     loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
-      (line1 split " ") :+ NULL foreach (word1 =>
+      NULL +: (line1 split " ") foreach (word1 =>
         line2 split " " foreach (word2 =>
           if (translationParams.contains(word1))
             translationParams(word1) += (word2 -> transParamEst.estimate(word2, word1, n))
@@ -63,25 +71,31 @@ class MachineTranslator {
 
     translationParams
   }
-  
+
   def getInitialAlignmentParams(lang1FilePath: String, lang2FilePath: String) = {
 
-    val alignmentParams = collection.mutable.Map[String, Double]()
-    
+    val alignmentParams = collection.mutable.Map[(Int, Int, Int, Int), Double]()
+    val sentenceLengthPairs = collection.mutable.Set[(Int, Int)]()
+
     println("Initializing alignmentParams:")
 
     loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
-      (line1 split " ") :+ NULL foreach (word1 =>
-        line2 split " " foreach (word2 => 0
-          
-          
-          )
+      sentenceLengthPairs += ((line1 split " ").size -> (line2 split " ").size)
 
-    )})
+    })
+
+    sentenceLengthPairs foreach {
+      case (l, m) =>
+        println(".")
+        0 to l foreach (j =>
+          1 to m foreach (i =>
+            alignmentParams((j, i, l, m)) = 1.0 / (l + 1)))
+    }
 
     println("Done Initializing alignmentParams")
- 
+
+    alignmentParams
   }
 
 }

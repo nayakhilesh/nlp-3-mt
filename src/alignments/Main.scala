@@ -12,10 +12,10 @@ object Main {
 
     val translator = new MachineTranslator
     translator.initialize(args(0), args(1))
-    
-    // TODO
-    // translator.translate
-    // regression tests
+
+    // TODO translator.translate 
+    // TODO regression tests
+    // TODO logging
 
     val end = Platform.currentTime
 
