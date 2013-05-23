@@ -16,6 +16,11 @@ object Main {
     // TODO translator.translate 
     // TODO regression tests
     // TODO logging
+    // TODO writing/reading params to/from file
+    // TODO driven by config/properties file
+    // TODO segregate into packages
+    
+    // TODO debug IbmModel2
 
     val end = Platform.currentTime
 
