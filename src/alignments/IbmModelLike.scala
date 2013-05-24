@@ -7,5 +7,9 @@ trait IbmModelLike {
   def initialize
 
   def writeAlignments
+  
+  def writeParams
+  
+  def readParams
 
 }
