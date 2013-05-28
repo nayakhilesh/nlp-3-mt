@@ -4,12 +4,12 @@ trait IbmModelLike {
 
   // TODO use
 
-  def initialize
+  def computeParams
 
   def writeAlignments
-  
+
   def writeParams
-  
+
   def readParams
 
 }

@@ -2,14 +2,19 @@ package alignments
 
 import scala.Array.canBuildFrom
 import scala.compat.Platform
+import scala.io.Source
 
-class IbmModel2(initialTranslationParams: collection.mutable.Map[String, collection.mutable.Map[String, Double]],
-  initialAlignmentParams: collection.mutable.Map[(Int, Int, Int, Int), Double]) {
+class IbmModel2 {
 
-  val translationParams = initialTranslationParams
-  val alignmentParams = initialAlignmentParams
+  var translationParams = collection.mutable.Map[String, collection.mutable.Map[String, Double]]()
+  var alignmentParams = collection.mutable.Map[(Int, Int, Int, Int), Double]()
 
-  def initialize(lang1FilePath: String, lang2FilePath: String, numIterations: Int) {
+  def computeParams(initialTranslationParams: collection.mutable.Map[String, collection.mutable.Map[String, Double]],
+    initialAlignmentParams: collection.mutable.Map[(Int, Int, Int, Int), Double],
+    lang1FilePath: String, lang2FilePath: String, numIterations: Int) {
+
+    translationParams = initialTranslationParams
+    alignmentParams = initialAlignmentParams
 
     val startEm = Platform.currentTime
 
@@ -109,6 +114,58 @@ class IbmModel2(initialTranslationParams: collection.mutable.Map[String, collect
     })
 
     outputFile.close()
+
+  }
+
+  def writeParams(outputFilePath: String) {
+
+    val outputFile = new java.io.FileWriter(outputFilePath)
+
+    translationParams.foreach {
+      case (word1, map) =>
+        map.foreach { case (word2, prob) => outputFile.write(word1 + " " + word2 + " " + prob + "\n") }
+    }
+
+    outputFile.write("\n")
+
+    alignmentParams.foreach {
+      case ((index2, index1, size1, size2), prob) =>
+        outputFile.write(index2 + " " + index1 + " " + size1 + " " + size2 + " " + prob + "\n")
+    }
+
+    outputFile.close()
+
+  }
+
+  def readParams(filePath: String) {
+
+    val fileLines = Source.fromFile(filePath, "utf-8").getLines
+    var reachedTransition = false
+
+    for ((line, index) <- fileLines zipWithIndex) {
+      if ((index + 1) % 200 == 0) println("line#:" + (index + 1))
+      if (!line.trim.isEmpty) {
+        val tokens = line split " "
+        if (!reachedTransition) {
+          val word1 = tokens(0)
+          val word2 = tokens(1)
+          val prob = tokens(2).toDouble
+          if (translationParams.contains(word1))
+            translationParams(word1) += (word2 -> prob)
+          else
+            translationParams(word1) = collection.mutable.Map(word2 -> prob)
+        } else {
+          val index2 = tokens(0).toInt
+          val index1 = tokens(1).toInt
+          val size1 = tokens(2).toInt
+          val size2 = tokens(3).toInt
+          val prob = tokens(4).toDouble
+          alignmentParams((index2, index1, size1, size2)) = prob
+        }
+      } else {
+        reachedTransition = true
+      }
+    }
 
   }
 

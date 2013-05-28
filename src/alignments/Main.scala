@@ -2,6 +2,8 @@ package alignments;
 
 import scala.compat.Platform
 
+import com.typesafe.config.ConfigFactory
+
 object Main {
 
   def main(args: Array[String]) {
@@ -10,8 +12,10 @@ object Main {
 
     val start = Platform.currentTime
 
+    val conf = ConfigFactory.load()
+
     val translator = new MachineTranslator
-    translator.initialize(args(0), args(1))
+    translator.initialize(conf, args(0), args(1))
 
     // TODO translator.translate 
     // TODO regression tests
@@ -19,7 +23,8 @@ object Main {
     // TODO writing/reading params to/from file
     // TODO driven by config/properties file
     // TODO segregate into packages
-    
+    // TODO add defaulting of translationParams and alignmentParams into IbmModels
+
     // TODO debug IbmModel2
 
     val end = Platform.currentTime

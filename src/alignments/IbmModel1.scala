@@ -2,13 +2,16 @@ package alignments
 
 import scala.Array.canBuildFrom
 import scala.compat.Platform
+import scala.io.Source
 
-class IbmModel1(initialTranslationParams: collection.mutable.Map[String, collection.mutable.Map[String, Double]]) {
+class IbmModel1 {
 
-  val translationParams = initialTranslationParams
+  var translationParams = collection.mutable.Map[String, collection.mutable.Map[String, Double]]()
 
-  def initialize(lang1FilePath: String, lang2FilePath: String, numIterations: Int) {
+  def computeParams(initialTranslationParams: collection.mutable.Map[String, collection.mutable.Map[String, Double]],
+    lang1FilePath: String, lang2FilePath: String, numIterations: Int) {
 
+    translationParams = initialTranslationParams
     val startEm = Platform.currentTime
 
     val temp = translationParams.toSeq.flatMap {
@@ -75,6 +78,39 @@ class IbmModel1(initialTranslationParams: collection.mutable.Map[String, collect
     })
 
     outputFile.close()
+
+  }
+
+  def writeParams(outputFilePath: String) {
+
+    val outputFile = new java.io.FileWriter(outputFilePath)
+
+    translationParams.foreach {
+      case (word1, map) =>
+        map.foreach { case (word2, prob) => outputFile.write(word1 + " " + word2 + " " + prob + "\n") }
+    }
+
+    outputFile.close()
+
+  }
+
+  def readParams(filePath: String) {
+
+    val fileLines = Source.fromFile(filePath, "utf-8").getLines
+
+    for ((line, index) <- fileLines zipWithIndex) {
+      if ((index + 1) % 200 == 0) println("line#:" + (index + 1))
+      if (!line.trim.isEmpty) {
+        val tokens = line split " "
+        val word1 = tokens(0)
+        val word2 = tokens(1)
+        val prob = tokens(2).toDouble
+        if (translationParams.contains(word1))
+          translationParams(word1) += (word2 -> prob)
+        else
+          translationParams(word1) = collection.mutable.Map(word2 -> prob)
+      }
+    }
 
   }
 
