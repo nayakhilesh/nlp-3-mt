@@ -4,14 +4,18 @@ import scala.Array.canBuildFrom
 import scala.compat.Platform
 import scala.io.Source
 
-class IbmModel1 {
+class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
-  var translationParams = collection.mutable.Map[String, collection.mutable.Map[String, Double]]()
+  var translationParams = new TranslationParameters
 
-  def computeParams(initialTranslationParams: collection.mutable.Map[String, collection.mutable.Map[String, Double]],
-    lang1FilePath: String, lang2FilePath: String, numIterations: Int) {
+  def computeParams(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
+    initialTranslationParams: TranslationParameters = null) {
 
-    translationParams = initialTranslationParams
+    if (initialTranslationParams == null)
+      translationParams = getDefaultTranslationParams(lang1FilePath, lang2FilePath)
+    else
+      translationParams = initialTranslationParams
+
     val startEm = Platform.currentTime
 
     val temp = translationParams.toSeq.flatMap {
@@ -19,7 +23,7 @@ class IbmModel1 {
         map.foldLeft(List[(String, String)]()) { case (list, (word2, _)) => (word1, word2) +: list }
     }
 
-    println("number of lang2|lang1 combinations in translationParams:" + temp.size)
+    println("also number of lang2|lang1 combinations in translationParams:" + temp.size)
 
     1 to numIterations foreach { iter =>
       println("Starting iteration #" + iter)
@@ -60,7 +64,7 @@ class IbmModel1 {
 
   }
 
-  def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
+  override def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
 
     val outputFile = new java.io.FileWriter(outputFilePath)
 
@@ -81,7 +85,7 @@ class IbmModel1 {
 
   }
 
-  def writeParams(outputFilePath: String) {
+  override def writeParams(outputFilePath: String) {
 
     val outputFile = new java.io.FileWriter(outputFilePath)
 
@@ -94,7 +98,7 @@ class IbmModel1 {
 
   }
 
-  def readParams(filePath: String) {
+  override def readParams(filePath: String) {
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
 

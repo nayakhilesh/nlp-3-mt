@@ -12,18 +12,16 @@ object Main {
 
     val start = Platform.currentTime
 
-    val conf = ConfigFactory.load()
+    val mtConf = ConfigFactory.load()
+    //println(mtConf.getString("machine-translator.model1.params-write-file"))
 
     val translator = new MachineTranslator
-    translator.initialize(conf, args(0), args(1))
+    translator.initialize(mtConf, args(0), args(1))
 
-    // TODO translator.translate 
+    // TODO translator.translate
     // TODO regression tests
     // TODO logging
-    // TODO writing/reading params to/from file
-    // TODO driven by config/properties file
     // TODO segregate into packages
-    // TODO add defaulting of translationParams and alignmentParams into IbmModels
 
     // TODO debug IbmModel2
 

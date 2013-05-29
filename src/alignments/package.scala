@@ -2,6 +2,9 @@ import scala.io.Source
 
 package object alignments {
 
+  type TranslationParameters = collection.mutable.HashMap[String, collection.mutable.Map[String, Double]]
+  type AlignmentParameters = collection.mutable.HashMap[(Int, Int, Int, Int), Double]
+
   val NULL = "NULL"
 
   def loopThroughFiles(file1Path: String, file2Path: String)(funcToPerform: (String, String, Int) => _) {

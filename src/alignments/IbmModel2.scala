@@ -4,17 +4,24 @@ import scala.Array.canBuildFrom
 import scala.compat.Platform
 import scala.io.Source
 
-class IbmModel2 {
+class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultAlignmentParams {
 
-  var translationParams = collection.mutable.Map[String, collection.mutable.Map[String, Double]]()
-  var alignmentParams = collection.mutable.Map[(Int, Int, Int, Int), Double]()
+  var translationParams = new TranslationParameters
+  var alignmentParams = new AlignmentParameters
 
-  def computeParams(initialTranslationParams: collection.mutable.Map[String, collection.mutable.Map[String, Double]],
-    initialAlignmentParams: collection.mutable.Map[(Int, Int, Int, Int), Double],
-    lang1FilePath: String, lang2FilePath: String, numIterations: Int) {
+  def computeParams(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
+    initialTranslationParams: TranslationParameters = null,
+    initialAlignmentParams: AlignmentParameters = null) {
 
-    translationParams = initialTranslationParams
-    alignmentParams = initialAlignmentParams
+    if (initialTranslationParams == null)
+      translationParams = getDefaultTranslationParams(lang1FilePath, lang2FilePath)
+    else
+      translationParams = initialTranslationParams
+
+    if (initialAlignmentParams == null)
+      alignmentParams = getDefaultAlignmentParams(lang1FilePath, lang2FilePath)
+    else
+      alignmentParams = initialAlignmentParams
 
     val startEm = Platform.currentTime
 
@@ -25,8 +32,8 @@ class IbmModel2 {
 
     val tempAlign = alignmentParams.keys
 
-    println("number of lang2|lang1 combinations in translationParams:" + temp.size)
-    println("number of 4-tuples in alignmentParams:" + tempAlign.size)
+    println("also number of lang2|lang1 combinations in translationParams:" + temp.size)
+    println("also number of 4-tuples in alignmentParams:" + tempAlign.size)
 
     1 to numIterations foreach { iter =>
       println("Starting iteration #" + iter)

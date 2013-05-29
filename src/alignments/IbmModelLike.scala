@@ -2,14 +2,12 @@ package alignments
 
 trait IbmModelLike {
 
-  // TODO use
+  //computeParams
 
-  def computeParams
+  def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String)
 
-  def writeAlignments
+  def writeParams(filePath: String)
 
-  def writeParams
-
-  def readParams
+  def readParams(filePath: String)
 
 }
