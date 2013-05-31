@@ -1,6 +1,8 @@
+package main.scala
+
 import scala.io.Source
 
-package object alignments {
+object Utils {
 
   type TranslationParameters = collection.mutable.HashMap[String, collection.mutable.Map[String, Double]]
   type AlignmentParameters = collection.mutable.HashMap[(Int, Int, Int, Int), Double]

@@ -1,4 +1,4 @@
-package alignments;
+package main.scala
 
 import scala.compat.Platform
 
@@ -12,8 +12,7 @@ object Main {
 
     val start = Platform.currentTime
 
-    val mtConf = ConfigFactory.load()
-    //println(mtConf.getString("machine-translator.model1.params-write-file"))
+    val mtConf = ConfigFactory.load("mt.conf")
 
     val translator = new MachineTranslator
     translator.initialize(mtConf, args(0), args(1))
@@ -22,8 +21,6 @@ object Main {
     // TODO regression tests
     // TODO logging
     // TODO segregate into packages
-
-    // TODO debug IbmModel2
 
     val end = Platform.currentTime
 

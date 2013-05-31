@@ -1,6 +1,10 @@
-package alignments
+package main.scala
 
 import scala.Array.canBuildFrom
+
+import Utils.NULL
+import Utils.TranslationParameters
+import Utils.loopThroughFiles
 
 trait DefaultTranslationParams {
 

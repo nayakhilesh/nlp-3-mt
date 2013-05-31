@@ -1,4 +1,7 @@
-package alignments
+package main.scala
+
+import Utils.AlignmentParameters
+import Utils.loopThroughFiles
 
 trait DefaultAlignmentParams {
 
@@ -17,7 +20,7 @@ trait DefaultAlignmentParams {
 
     sentenceLengthPairs foreach {
       case (l, m) =>
-        println(".")
+        println(".") // TODO change? (horizontal bar)
         0 to l foreach (j =>
           1 to m foreach (i =>
             alignmentParams((j, i, l, m)) = 1.0 / (l + 1)))

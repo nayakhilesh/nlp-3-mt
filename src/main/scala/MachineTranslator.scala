@@ -1,4 +1,4 @@
-package alignments
+package main.scala
 
 import com.typesafe.config.Config
 

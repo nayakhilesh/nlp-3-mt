@@ -1,8 +1,19 @@
-package alignments
+package main.scala
+
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
 
 import scala.Array.canBuildFrom
 import scala.compat.Platform
 import scala.io.Source
+import scala.util.Marshal
+
+import Utils.NULL
+import Utils.TranslationParameters
+import Utils.loopThroughFiles
 
 class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
@@ -66,6 +77,8 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
   override def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
 
+    println("Writing alignments:")
+
     val outputFile = new java.io.FileWriter(outputFilePath)
 
     loopThroughFiles(input1FilePath, input2FilePath)((line1: String, line2: String, index: Int) => {
@@ -83,27 +96,37 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
     outputFile.close()
 
+    println("Done Writing alignments")
+
   }
 
   override def writeParams(outputFilePath: String) {
 
-    val outputFile = new java.io.FileWriter(outputFilePath)
+    println("Writing params to file")
+
+    val out = new BufferedWriter(new OutputStreamWriter(
+      new FileOutputStream(new File(outputFilePath)), "UTF8"));
 
     translationParams.foreach {
       case (word1, map) =>
-        map.foreach { case (word2, prob) => outputFile.write(word1 + " " + word2 + " " + prob + "\n") }
+        map.foreach { case (word2, prob) => out.write(word1 + " " + word2 + " " + prob + "\n") }
     }
 
-    outputFile.close()
+    out.flush();
+    out.close();
+
+    println("Done Writing params to file")
 
   }
 
   override def readParams(filePath: String) {
 
+    println("Reading params from file:")
+
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
 
     for ((line, index) <- fileLines zipWithIndex) {
-      if ((index + 1) % 200 == 0) println("line#:" + (index + 1))
+      if ((index + 1) % 2000 == 0) println("line#:" + (index + 1))
       if (!line.trim.isEmpty) {
         val tokens = line split " "
         val word1 = tokens(0)
@@ -116,6 +139,30 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
       }
     }
 
+    println("Done Reading params from file")
+    println("number of lang1 words in translationParams:" + translationParams.size)
+    println("number of lang2|lang1 combinations in translationParams:" +
+      translationParams.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
+
+  }
+
+  override def serializeParams(outputFilePath: String) {
+
+    // TODO
+    val out = new FileOutputStream(outputFilePath)
+    out.write(Marshal.dump(translationParams))
+    out.close
+
+  }
+
+  override def deserializeParams(filePath: String) = {
+
+    // TODO
+    val in = new FileInputStream(filePath)
+    val bytes = Stream.continually(in.read).takeWhile(-1 !=).map(_.toByte).toArray
+    val bar: TranslationParameters = Marshal.load[TranslationParameters](bytes)
+
+    bar
   }
 
 }
