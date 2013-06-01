@@ -2,14 +2,12 @@ package main.scala
 
 import java.io.BufferedWriter
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 
 import scala.Array.canBuildFrom
 import scala.compat.Platform
 import scala.io.Source
-import scala.util.Marshal
 
 import Utils.AlignmentParameters
 import Utils.NULL
@@ -18,8 +16,8 @@ import Utils.loopThroughFiles
 
 class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultAlignmentParams {
 
-  var translationParams = new TranslationParameters
-  var alignmentParams = new AlignmentParameters
+  var translationParams: TranslationParameters = _
+  var alignmentParams: AlignmentParameters = _
 
   def computeParams(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
     initialTranslationParams: TranslationParameters = null,
@@ -169,6 +167,9 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
 
   def readParams(filePath: String) {
 
+    translationParams = new TranslationParameters
+    alignmentParams = new AlignmentParameters
+
     println("Reading params from file:")
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
@@ -205,25 +206,6 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
       translationParams.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
     println("number of 4-tuples in alignmentParams:" + alignmentParams.size)
 
-  }
-
-  override def serializeParams(outputFilePath: String) {
-
-    // TODO
-    val out = new FileOutputStream(outputFilePath)
-    out.write(Marshal.dump(translationParams))
-    out.close
-
-  }
-
-  override def deserializeParams(filePath: String) = {
-
-    // TODO
-    val in = new FileInputStream(filePath)
-    val bytes = Stream.continually(in.read).takeWhile(-1 !=).map(_.toByte).toArray
-    val bar: TranslationParameters = Marshal.load[TranslationParameters](bytes)
-
-    bar
   }
 
 }

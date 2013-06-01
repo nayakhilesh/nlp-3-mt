@@ -2,14 +2,12 @@ package main.scala
 
 import java.io.BufferedWriter
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 
 import scala.Array.canBuildFrom
 import scala.compat.Platform
 import scala.io.Source
-import scala.util.Marshal
 
 import Utils.NULL
 import Utils.TranslationParameters
@@ -17,7 +15,7 @@ import Utils.loopThroughFiles
 
 class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
-  var translationParams = new TranslationParameters
+  var translationParams: TranslationParameters = _
 
   def computeParams(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
     initialTranslationParams: TranslationParameters = null) {
@@ -121,6 +119,8 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
   override def readParams(filePath: String) {
 
+    translationParams = new TranslationParameters
+
     println("Reading params from file:")
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
@@ -144,25 +144,6 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
     println("number of lang2|lang1 combinations in translationParams:" +
       translationParams.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
 
-  }
-
-  override def serializeParams(outputFilePath: String) {
-
-    // TODO
-    val out = new FileOutputStream(outputFilePath)
-    out.write(Marshal.dump(translationParams))
-    out.close
-
-  }
-
-  override def deserializeParams(filePath: String) = {
-
-    // TODO
-    val in = new FileInputStream(filePath)
-    val bytes = Stream.continually(in.read).takeWhile(-1 !=).map(_.toByte).toArray
-    val bar: TranslationParameters = Marshal.load[TranslationParameters](bytes)
-
-    bar
   }
 
 }

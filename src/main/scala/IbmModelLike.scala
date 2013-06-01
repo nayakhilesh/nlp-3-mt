@@ -1,7 +1,5 @@
 package main.scala
 
-import Utils.TranslationParameters
-
 trait IbmModelLike {
 
   // TODO break up into atomic traits?
@@ -12,10 +10,5 @@ trait IbmModelLike {
   def writeParams(filePath: String)
 
   def readParams(filePath: String)
-
-  // TODO
-  def serializeParams(filePath: String)
-
-  def deserializeParams(filePath: String): TranslationParameters
 
 }
