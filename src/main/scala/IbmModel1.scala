@@ -73,29 +73,19 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
   }
 
-  override def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
+  override def extractAlignments(line1: String, line2: String) = {
 
-    println("Writing alignments:")
+    val list = collection.mutable.ListBuffer[Int]()
+    for (word2 <- line2 split " ") {
 
-    val outputFile = new java.io.FileWriter(outputFilePath)
-
-    loopThroughFiles(input1FilePath, input2FilePath)((line1: String, line2: String, index: Int) => {
-
-      for ((word2, index2) <- line2 split " " zipWithIndex) {
-
-        val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
-          case (word1, index1) => translationParams(word1)(word2)
-        }
-        outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
-
+      val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
+        case (word1, index1) => translationParams(word1)(word2)
       }
+      list += maxIndex
 
-    })
+    }
 
-    outputFile.close()
-
-    println("Done Writing alignments")
-
+    list.toList
   }
 
   override def writeParams(outputFilePath: String) {

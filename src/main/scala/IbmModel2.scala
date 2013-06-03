@@ -107,39 +107,31 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
 
   }
 
-  def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
+  override def extractAlignments(line1: String, line2: String) = {
 
-    println("Writing alignments:")
+    val list = collection.mutable.ListBuffer[Int]()
 
-    val outputFile = new java.io.FileWriter(outputFilePath)
+    val arr2WithIndex = line2 split " " zipWithIndex
+    val size2 = arr2WithIndex.size
 
-    loopThroughFiles(input1FilePath, input2FilePath)((line1: String, line2: String, index: Int) => {
+    for ((word2, index2) <- arr2WithIndex) {
 
-      val arr2WithIndex = line2 split " " zipWithIndex
-      val size2 = arr2WithIndex.size
+      val arr1 = line1 split " "
+      val size1 = arr1.size
+      val arr1WithIndex = NULL +: arr1 zipWithIndex
 
-      for ((word2, index2) <- arr2WithIndex) {
-
-        val arr1 = line1 split " "
-        val size1 = arr1.size
-        val arr1WithIndex = NULL +: arr1 zipWithIndex
-
-        val (_, maxIndex) = arr1WithIndex.maxBy {
-          case (word1, index1) => alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)
-        }
-        outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
-
+      val (_, maxIndex) = arr1WithIndex.maxBy {
+        case (word1, index1) => alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)
       }
 
-    })
+      list += maxIndex
 
-    outputFile.close()
+    }
 
-    println("Done Writing alignments")
-
+    list.toList
   }
 
-  def writeParams(outputFilePath: String) {
+  override def writeParams(outputFilePath: String) {
 
     println("Writing params to file")
 
@@ -165,7 +157,7 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
 
   }
 
-  def readParams(filePath: String) {
+  override def readParams(filePath: String) {
 
     translationParams = new TranslationParameters
     alignmentParams = new AlignmentParameters
