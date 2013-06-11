@@ -168,7 +168,7 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
     var reachedTransition = false
 
     for ((line, index) <- fileLines zipWithIndex) {
-      if ((index + 1) % 2000 == 0) println("line#:" + (index + 1))
+      if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
       if (!line.trim.isEmpty) {
         val tokens = line split " "
         if (!reachedTransition) {

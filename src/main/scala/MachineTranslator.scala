@@ -12,7 +12,7 @@ class MachineTranslator {
     //p(f|e); lang1 = e
     val ibm2Lang1 = new IbmModel2
     initializeIbmModel2(lang1FilePath, lang2FilePath, lang1ParamsReadFile, lang1ParamsWriteFile, ibm2Lang1)
-    
+
     val lang2ParamsReadFile = conf.getString("machine-translator.lang2.params-read-file")
     val lang2ParamsWriteFile = conf.getString("machine-translator.lang2.params-write-file")
 
