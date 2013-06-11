@@ -76,7 +76,7 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
   override def extractAlignments(line1: String, line2: String) = {
 
     val list = collection.mutable.ListBuffer[Int]()
-    for (word2 <- line2 split " ") {
+    line2 split " " foreach { word2 =>
 
       val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
         case (word1, index1) => translationParams(word1)(word2)
@@ -115,18 +115,19 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
 
-    for ((line, index) <- fileLines zipWithIndex) {
-      if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
-      if (!line.trim.isEmpty) {
-        val tokens = line split " "
-        val word1 = tokens(0)
-        val word2 = tokens(1)
-        val prob = tokens(2).toDouble
-        if (translationParams.contains(word1))
-          translationParams(word1) += (word2 -> prob)
-        else
-          translationParams(word1) = collection.mutable.Map(word2 -> prob)
-      }
+    (fileLines zipWithIndex) foreach {
+      case (line, index) =>
+        if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
+        if (!line.trim.isEmpty) {
+          val tokens = line split " "
+          val word1 = tokens(0) intern
+          val word2 = tokens(1) intern
+          val prob = tokens(2).toDouble
+          if (translationParams.contains(word1))
+            translationParams(word1) += (word2 -> prob)
+          else
+            translationParams(word1) = collection.mutable.Map(word2 -> prob)
+        }
     }
 
     println("Done Reading params from file")

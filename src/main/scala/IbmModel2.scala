@@ -114,17 +114,18 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
     val arr2WithIndex = line2 split " " zipWithIndex
     val size2 = arr2WithIndex.size
 
-    for ((word2, index2) <- arr2WithIndex) {
+    arr2WithIndex foreach {
+      case (word2, index2) =>
 
-      val arr1 = line1 split " "
-      val size1 = arr1.size
-      val arr1WithIndex = NULL +: arr1 zipWithIndex
+        val arr1 = line1 split " "
+        val size1 = arr1.size
+        val arr1WithIndex = NULL +: arr1 zipWithIndex
 
-      val (_, maxIndex) = arr1WithIndex.maxBy {
-        case (word1, index1) => alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)
-      }
+        val (_, maxIndex) = arr1WithIndex.maxBy {
+          case (word1, index1) => alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)
+        }
 
-      list += maxIndex
+        list += maxIndex
 
     }
 
@@ -167,29 +168,30 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
     var reachedTransition = false
 
-    for ((line, index) <- fileLines zipWithIndex) {
-      if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
-      if (!line.trim.isEmpty) {
-        val tokens = line split " "
-        if (!reachedTransition) {
-          val word1 = tokens(0)
-          val word2 = tokens(1)
-          val prob = tokens(2).toDouble
-          if (translationParams.contains(word1))
-            translationParams(word1) += (word2 -> prob)
-          else
-            translationParams(word1) = collection.mutable.Map(word2 -> prob)
+    (fileLines zipWithIndex) foreach {
+      case (line, index) =>
+        if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
+        if (!line.trim.isEmpty) {
+          val tokens = line split " "
+          if (!reachedTransition) {
+            val word1 = tokens(0) intern
+            val word2 = tokens(1) intern
+            val prob = tokens(2).toDouble
+            if (translationParams.contains(word1))
+              translationParams(word1) += (word2 -> prob)
+            else
+              translationParams(word1) = collection.mutable.Map(word2 -> prob)
+          } else {
+            val index2 = tokens(0).toInt
+            val index1 = tokens(1).toInt
+            val size1 = tokens(2).toInt
+            val size2 = tokens(3).toInt
+            val prob = tokens(4).toDouble
+            alignmentParams((index2, index1, size1, size2)) = prob
+          }
         } else {
-          val index2 = tokens(0).toInt
-          val index1 = tokens(1).toInt
-          val size1 = tokens(2).toInt
-          val size2 = tokens(3).toInt
-          val prob = tokens(4).toDouble
-          alignmentParams((index2, index1, size1, size2)) = prob
+          reachedTransition = true
         }
-      } else {
-        reachedTransition = true
-      }
     }
 
     println("Done Reading params from file")

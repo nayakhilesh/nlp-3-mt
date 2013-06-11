@@ -16,8 +16,9 @@ trait IbmModelLike {
     loopThroughFiles(input1FilePath, input2FilePath)((line1: String, line2: String, index: Int) => {
 
       val list = extractAlignments(line1, line2)
-      for ((maxIndex, index2) <- list zipWithIndex) {
-        outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
+      (list zipWithIndex) foreach {
+        case (maxIndex, index2) =>
+          outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
       }
 
     })
