@@ -19,7 +19,7 @@ class MachineTranslator {
     //p(e|f); lang2 = f
     val ibm2Lang2 = new IbmModel2
     initializeIbmModel2(lang2FilePath, lang1FilePath, lang2ParamsReadFile, lang2ParamsWriteFile, ibm2Lang2)
-    
+
     // TODO buildLexicon
 
   }

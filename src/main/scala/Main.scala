@@ -9,7 +9,7 @@ object Main {
   def main(args: Array[String]) {
 
     //usage: corpus.en, corpus.es
-	
+
     val start = Platform.currentTime
 
     val mtConf = ConfigFactory.load("mt.conf")
