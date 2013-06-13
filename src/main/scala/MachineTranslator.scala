@@ -2,6 +2,7 @@ package main.scala
 
 import com.typesafe.config.Config
 import Utils.loopThroughFiles
+import Utils.arrayToString
 
 class MachineTranslator {
 
@@ -46,8 +47,61 @@ class MachineTranslator {
           else lang1FinalAlignments += null
       }
 
-      println(lang2FinalAlignments)
-      println(lang1FinalAlignments)
+      //println(lang2FinalAlignments)
+      //println(lang1FinalAlignments)
+      
+      // TODO grow alignments here
+      val words1 = line1 split " "
+      val words2 = line2 split " "
+      
+      val translatedPairs = new collection.mutable.HashSet[(Array[String], Array[String])]
+      
+      var startLang2 = 0
+      var startLang1 = 0
+      var lengthLang2 = 0
+      var lengthLang1 = 0
+      
+      while (startLang2 < lang2FinalAlignments.size) {
+        lengthLang2 = 0
+        while (lengthLang2 < lang2FinalAlignments.size - startLang2) {
+          startLang1 = 0
+          while (startLang1 < lang1FinalAlignments.size) {
+            lengthLang1 = 0
+            while (lengthLang1 < lang1FinalAlignments.size - startLang1) {
+              
+              var foundException = false
+              
+              var temp2 = startLang2
+              while (!foundException && temp2 <= startLang2 + lengthLang2) {
+                val valueSeq = lang2FinalAlignments(temp2)
+                if (valueSeq == null || valueSeq.exists { value => value < startLang1 || value > (startLang1 + lengthLang1)})
+                  foundException = true  
+                temp2 += 1
+              }
+              
+              var temp1 = startLang1
+              while (!foundException && temp1 <= startLang1 + lengthLang1) {
+                val valueSeq = lang1FinalAlignments(temp1)
+                if (valueSeq == null || valueSeq.exists { value => value < startLang2 || value > (startLang2 + lengthLang2)})
+                  foundException = true  
+                temp1 += 1
+              }
+              
+              if (!foundException) {
+                val phraseLang2 = words2.slice(startLang2, startLang2 + lengthLang2 + 1)
+                val phraseLang1 = words1.slice(startLang1, startLang1 + lengthLang1 + 1)
+                println(arrayToString(phraseLang2) + "|" + arrayToString(phraseLang1))
+                translatedPairs += (phraseLang2 -> phraseLang1)
+              }
+                   
+              lengthLang1 += 1
+            }
+            startLang1 += 1
+          }   
+          lengthLang2 += 1
+        }
+        startLang2 += 1
+      }
 
     })
 

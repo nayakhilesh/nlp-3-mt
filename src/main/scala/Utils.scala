@@ -24,4 +24,13 @@ object Utils {
 
   }
 
+  def arrayToString[T](array: Array[T]): String = {
+    val sb = collection.mutable.StringBuilder.newBuilder
+    array foreach { i =>
+      sb append i.toString
+      sb append " "
+    }
+    sb toString
+  }
+
 }
