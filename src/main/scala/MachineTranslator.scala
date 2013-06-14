@@ -3,6 +3,7 @@ package main.scala
 import com.typesafe.config.Config
 import Utils.loopThroughFiles
 import Utils.arrayToString
+import collection.mutable.ArrayBuffer
 
 class MachineTranslator {
 
@@ -30,21 +31,21 @@ class MachineTranslator {
 
       val lang1Alignments = ibm2Lang2.extractAlignments(line2, line1)
 
-      val lang2FinalAlignments = new collection.mutable.ArrayBuffer[Seq[Int]](lang2Alignments.size)
-      val lang1FinalAlignments = new collection.mutable.ArrayBuffer[Seq[Int]](lang1Alignments.size)
+      val lang2FinalAlignments = new ArrayBuffer[ArrayBuffer[Int]](lang2Alignments.size)
+      val lang1FinalAlignments = new ArrayBuffer[ArrayBuffer[Int]](lang1Alignments.size)
 
       (lang2Alignments zipWithIndex) foreach {
         case (lang1Index, lang2Index) =>
           if (lang1Index > 0 && lang1Alignments(lang1Index - 1) == lang2Index + 1)
-            lang2FinalAlignments += collection.mutable.IndexedSeq[Int](lang1Index - 1)
-          else lang2FinalAlignments += collection.mutable.IndexedSeq[Int]()
+            lang2FinalAlignments += (ArrayBuffer[Int]() += lang1Index - 1)
+          else lang2FinalAlignments += ArrayBuffer[Int]()
       }
 
       (lang1Alignments zipWithIndex) foreach {
         case (lang2Index, lang1Index) =>
           if (lang2Index > 0 && lang2Alignments(lang2Index - 1) == lang1Index + 1)
-            lang1FinalAlignments += collection.mutable.IndexedSeq[Int](lang2Index - 1)
-          else lang1FinalAlignments += collection.mutable.IndexedSeq[Int]()
+            lang1FinalAlignments += (ArrayBuffer[Int]() += lang2Index - 1)
+          else lang1FinalAlignments += ArrayBuffer[Int]()
       }
 
       //have intersection of alignments in alignment matrix here
@@ -68,7 +69,7 @@ class MachineTranslator {
       var startLang1 = 0
       var lengthLang2 = 0
       var lengthLang1 = 0
-      
+
       while (startLang2 < lang2FinalAlignments.size) {
         lengthLang2 = 0
         while (lengthLang2 < lang2FinalAlignments.size - startLang2) {
@@ -98,7 +99,7 @@ class MachineTranslator {
               if (!foundException) {
                 val phraseLang2 = words2.slice(startLang2, startLang2 + lengthLang2 + 1)
                 val phraseLang1 = words1.slice(startLang1, startLang1 + lengthLang1 + 1)
-                println(arrayToString(phraseLang2) + "|" + arrayToString(phraseLang1))
+                //println(arrayToString(phraseLang2) + "|" + arrayToString(phraseLang1))
                 translatedPairs += (phraseLang2 -> phraseLang1)
                 c2(phraseLang1 -> phraseLang2) = c2.getOrElse((phraseLang1 -> phraseLang2), 0) + 1
                 c1(phraseLang1) = c1.getOrElse(phraseLang1, 0) + 1
@@ -117,7 +118,8 @@ class MachineTranslator {
 
   }
 
-  private[this] def growAlignments(lang2FinalAlignments: IndexedSeq[Seq[Int]], lang1FinalAlignments: IndexedSeq[Seq[Int]],
+  private[this] def growAlignments(lang2FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
+    lang1FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
     lang2Alignments: Seq[Int], lang1Alignments: Seq[Int]) {
 
     (lang2FinalAlignments zipWithIndex) foreach {
@@ -145,11 +147,11 @@ class MachineTranslator {
 
           if (!(count == -1 && count1 == -1)) {
             if (count >= count1) {
-              lang2FinalAlignments(index2) :+ alignment
-              lang1FinalAlignments(alignment) :+ index2
+              lang2FinalAlignments(index2) += alignment
+              lang1FinalAlignments(alignment) += index2
             } else {
-              lang2FinalAlignments(index2) :+ row1
-              lang1FinalAlignments(row1) :+ index2
+              lang2FinalAlignments(index2) += row1
+              lang1FinalAlignments(row1) += index2
             }
           }
 
@@ -167,11 +169,12 @@ class MachineTranslator {
     var count = 0
 
     while (tempRow <= row + 1) {
+      tempCol = col - 1
       while (tempCol <= col + 1) {
 
         if (tempRow >= 0 && tempRow < lang1FinalAlignments.size &&
           tempCol >= 0 && tempCol < lang2FinalAlignments.size &&
-          tempRow != row && tempCol != col) {
+          !(tempRow == row && tempCol == col)) {
           val value1Seq = lang2FinalAlignments(tempCol)
           if (value1Seq contains tempRow)
             count += 1
