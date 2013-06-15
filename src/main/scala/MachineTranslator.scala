@@ -12,23 +12,26 @@ class MachineTranslator {
     val lang1ParamsReadFile = conf.getString("machine-translator.lang1.params-read-file")
     val lang1ParamsWriteFile = conf.getString("machine-translator.lang1.params-write-file")
 
-    //p(f|e); lang1 = e
+    //p(f|e)
+    //computes prob that word f in lang2 aligns to word e in lang1
     val ibm2Lang1 = new IbmModel2
     initializeIbmModel2(lang1FilePath, lang2FilePath, lang1ParamsReadFile, lang1ParamsWriteFile, ibm2Lang1)
 
     val lang2ParamsReadFile = conf.getString("machine-translator.lang2.params-read-file")
     val lang2ParamsWriteFile = conf.getString("machine-translator.lang2.params-write-file")
 
-    //p(e|f); lang2 = f
+    //p(e|f)
+    //computes prob that word e in lang1 aligns to word f in lang2
     val ibm2Lang2 = new IbmModel2
     initializeIbmModel2(lang2FilePath, lang1FilePath, lang2ParamsReadFile, lang2ParamsWriteFile, ibm2Lang2)
 
     // TODO buildLexicon
     loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
 
-      //each position has the index of the lang1 word it aligns to (starting from 0 = NULL)
+      //each position has the index of the lang1 word it aligns to (starting from 0 <=> NULL)
       val lang2Alignments = ibm2Lang1.extractAlignments(line1, line2)
 
+      //each position has the index of the lang2 word it aligns to (starting from 0 <=> NULL)
       val lang1Alignments = ibm2Lang2.extractAlignments(line2, line1)
 
       val lang2FinalAlignments = new ArrayBuffer[ArrayBuffer[Int]](lang2Alignments.size)
@@ -48,16 +51,10 @@ class MachineTranslator {
           else lang1FinalAlignments += ArrayBuffer[Int]()
       }
 
-      //have intersection of alignments in alignment matrix here
-      //println(lang2FinalAlignments)
-      //println(lang1FinalAlignments)
-
-      // TODO grow alignments here
-      //order matters
+      //order matters, though which is better?
       growAlignments(lang2FinalAlignments, lang1FinalAlignments, lang2Alignments, lang1Alignments)
       growAlignments(lang1FinalAlignments, lang2FinalAlignments, lang1Alignments, lang2Alignments)
-      //
-
+      
       val words1 = line1 split " "
       val words2 = line2 split " "
 
@@ -100,9 +97,11 @@ class MachineTranslator {
                 val phraseLang2 = words2.slice(startLang2, startLang2 + lengthLang2 + 1)
                 val phraseLang1 = words1.slice(startLang1, startLang1 + lengthLang1 + 1)
                 //println(arrayToString(phraseLang2) + "|" + arrayToString(phraseLang1))
-                translatedPairs += (phraseLang2 -> phraseLang1)
-                c2(phraseLang1 -> phraseLang2) = c2.getOrElse((phraseLang1 -> phraseLang2), 0) + 1
-                c1(phraseLang1) = c1.getOrElse(phraseLang1, 0) + 1
+                translatedPairs += (phraseLang1 -> phraseLang2)
+                c2(phraseLang2 -> phraseLang1) = c2.getOrElse((phraseLang2 -> phraseLang1), 0) + 1
+                c1(phraseLang2) = c1.getOrElse(phraseLang2, 0) + 1
+                //g(e,f) = log c(f,e)/c(f)
+                //e to f translation
               }
 
               lengthLang1 += 1
