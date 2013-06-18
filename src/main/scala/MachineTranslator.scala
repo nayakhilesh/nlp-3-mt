@@ -1,8 +1,8 @@
 package main.scala
 
 import com.typesafe.config.Config
+
 import Utils.loopThroughFiles
-import Utils.arrayToString
 
 class MachineTranslator {
 
@@ -36,6 +36,9 @@ class MachineTranslator {
       lexicon.add(lang1Alignments, lang2Alignments, line1, line2)
 
     })
+    
+    // TODO create trigram lang model (for f)
+    // TODO create decoder
 
   }
 

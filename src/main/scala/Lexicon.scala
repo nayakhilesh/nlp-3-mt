@@ -1,7 +1,6 @@
 package main.scala
 
-import Utils.loopThroughFiles
-import collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuffer
 
 class Lexicon {
 
@@ -14,6 +13,7 @@ class Lexicon {
     val lang2FinalAlignments = new ArrayBuffer[ArrayBuffer[Int]](lang2Alignments.size)
     val lang1FinalAlignments = new ArrayBuffer[ArrayBuffer[Int]](lang1Alignments.size)
 
+    // TODO extract into method
     (lang2Alignments zipWithIndex) foreach {
       case (lang1Index, lang2Index) =>
         if (lang1Index > 0 && lang1Alignments(lang1Index - 1) == lang2Index + 1)
@@ -36,8 +36,8 @@ class Lexicon {
     val words2 = line2 split " "
 
     var startLang2 = 0
-    var startLang1 = 0
     var lengthLang2 = 0
+    var startLang1 = 0
     var lengthLang1 = 0
 
     while (startLang2 < lang2FinalAlignments.size) {
@@ -50,6 +50,7 @@ class Lexicon {
 
             var foundException = false
 
+            // TODO extract into method
             var temp2 = startLang2
             while (!foundException && temp2 <= startLang2 + lengthLang2) {
               val valueSeq = lang2FinalAlignments(temp2)
@@ -88,6 +89,7 @@ class Lexicon {
 
   }
 
+  // TODO descriptive variable names
   private[this] def growAlignments(lang2FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
     lang1FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
     lang2Alignments: Seq[Int], lang1Alignments: Seq[Int]) {
@@ -97,9 +99,9 @@ class Lexicon {
         if (value1Seq.size == 0) {
 
           var count = -1
-          val alignment = lang2Alignments(index2) - 1
-          if (alignment >= 0) {
-            count = countNeighbours(alignment, index2, lang2FinalAlignments, lang1FinalAlignments)
+          val alignment1 = lang2Alignments(index2) - 1
+          if (alignment1 >= 0) {
+            count = countNeighbours(alignment1, index2, lang2FinalAlignments, lang1FinalAlignments)
           }
 
           var count1 = -1
@@ -117,8 +119,8 @@ class Lexicon {
 
           if (!(count == -1 && count1 == -1)) {
             if (count >= count1) {
-              lang2FinalAlignments(index2) += alignment
-              lang1FinalAlignments(alignment) += index2
+              lang2FinalAlignments(index2) += alignment1
+              lang1FinalAlignments(alignment1) += index2
             } else {
               lang2FinalAlignments(index2) += row1
               lang1FinalAlignments(row1) += index2
@@ -134,23 +136,20 @@ class Lexicon {
   private[this] def countNeighbours(row: Int, col: Int,
     lang2FinalAlignments: IndexedSeq[Seq[Int]], lang1FinalAlignments: IndexedSeq[Seq[Int]]): Int = {
 
-    var tempRow = row - 1
-    var tempCol = col - 1
     var count = 0
 
+    var tempRow = row - 1
     while (tempRow <= row + 1) {
-      tempCol = col - 1
+      var tempCol = col - 1
       while (tempCol <= col + 1) {
 
         if (tempRow >= 0 && tempRow < lang1FinalAlignments.size &&
           tempCol >= 0 && tempCol < lang2FinalAlignments.size &&
-          !(tempRow == row && tempCol == col)) {
-          val value1Seq = lang2FinalAlignments(tempCol)
-          if (value1Seq contains tempRow)
-            count += 1
-
+          !(tempRow == row && tempCol == col) &&
+          lang2FinalAlignments(tempCol).contains(tempRow)) {
+          count += 1
         }
-
+        
         tempCol += 1
       }
       tempRow += 1
