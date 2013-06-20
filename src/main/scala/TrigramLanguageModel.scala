@@ -35,23 +35,18 @@ class TrigramLanguageModel {
         if ((index + 1) % 200 == 0) println("line#:" + (index + 1))
 
         val words = line split " "
+        totalNumWords += words.size
+        val newWords = BeforeSymbol +: BeforeSymbol +: words :+ AfterSymbol
 
-        var word1: String = BeforeSymbol
-        var word2: String = BeforeSymbol
-        var word3: String = BeforeSymbol
-        words foreach {
-          case word =>
-            word1 = word2
-            word2 = word3
-            word3 = word
+        newWords sliding (3) foreach {
+          case seq =>
+            val word1 = seq(0)
+            val word2 = seq(1)
+            val word3 = seq(2)
             c3((word1, word2, word3)) = c3.getOrElse((word1, word2, word3), 0) + 1
             c2((word2, word3)) = c2.getOrElse((word2, word3), 0) + 1
             c1(word3) = c1.getOrElse(word3, 0) + 1
-            totalNumWords += 1
         }
-        c3((word2, word3, AfterSymbol)) = c3.getOrElse((word2, word3, AfterSymbol), 0) + 1
-        c2((word3, AfterSymbol)) = c2.getOrElse((word3, AfterSymbol), 0) + 1
-        c1(AfterSymbol) = c1.getOrElse(AfterSymbol, 0) + 1
 
     }
 
@@ -62,19 +57,15 @@ class TrigramLanguageModel {
         if ((index + 1) % 200 == 0) println("line#:" + (index + 1))
 
         val words = line split " "
+        val newWords = BeforeSymbol +: BeforeSymbol +: words :+ AfterSymbol
 
-        var word1: String = BeforeSymbol
-        var word2: String = BeforeSymbol
-        var word3: String = BeforeSymbol
-        words foreach {
-          case word =>
-            word1 = word2
-            word2 = word3
-            word3 = word
+        newWords sliding (3) foreach {
+          case seq =>
+            val word1 = seq(0)
+            val word2 = seq(1)
+            val word3 = seq(2)
             cPrime((word1, word2, word3)) = cPrime.getOrElse((word1, word2, word3), 0) + 1
-
         }
-        cPrime((word2, word3, AfterSymbol)) = cPrime.getOrElse((word2, word3, AfterSymbol), 0) + 1
 
     }
 
@@ -129,7 +120,20 @@ class TrigramLanguageModel {
 
   }
 
-  def estimate(word1: String, word2: String, word3: String) = {
+  def estimate(words: Seq[String]): Double = {
+
+    val newWords = BeforeSymbol +: BeforeSymbol +: words :+ AfterSymbol
+
+    (newWords sliding (3)).foldLeft(0.0) {
+      case (acc, seq) =>
+        val word1 = seq(0)
+        val word2 = seq(1)
+        val word3 = seq(2)
+        acc + math.log(q(word1, word2, word3))
+    }
+  }
+
+  private[this] def q(word1: String, word2: String, word3: String) = {
     (lambda1 * qML(word1, word2, word3)) + (lambda2 * qML(word2, word3)) +
       (lambda3 * qML(word1))
   }
