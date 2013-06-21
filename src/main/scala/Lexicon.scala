@@ -89,6 +89,11 @@ class Lexicon {
 
   }
 
+  // TODO
+  def estimate(words1: Array[String], words2: Array[String]): Double = {
+    0.0
+  }
+
   // TODO descriptive variable names
   private[this] def growAlignments(lang2FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
     lang1FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
@@ -149,7 +154,7 @@ class Lexicon {
           lang2FinalAlignments(tempCol).contains(tempRow)) {
           count += 1
         }
-        
+
         tempCol += 1
       }
       tempRow += 1
