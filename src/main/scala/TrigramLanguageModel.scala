@@ -1,29 +1,34 @@
 package main.scala
 
+import scala.Array.canBuildFrom
+import scala.compat.Platform
 import scala.io.Source
 import scala.util.Random
-import scala.compat.Platform
 
 class TrigramLanguageModel {
 
-  val c1 = collection.mutable.Map[String, Int]()
-  val c2 = collection.mutable.Map[(String, String), Int]()
-  val c3 = collection.mutable.Map[(String, String, String), Int]()
-  var totalNumWords = 0
-  var lambda1 = 0.0
-  var lambda2 = 0.0
-  var lambda3 = 0.0
+  //uses Linear Interpolation with history partitions
 
+  //constants
   val BeforeSymbol = "*"
   val AfterSymbol = "STOP"
-  val TrainingDataPercent = 0.95
-  val Epsilon = 10E-6
+  val ValidationDataFraction = 0.05
+  private[this] val Epsilon = 10E-6
+  private[this] val NumPartitions = 4
 
-  // TODO refactor
+  //state
+  private[this] val c1 = collection.mutable.Map[String, Int]()
+  private[this] val c2 = collection.mutable.Map[(String, String), Int]()
+  private[this] val c3 = collection.mutable.Map[(String, String, String), Int]()
+  private[this] var totalNumWords = 0
+  private[this] var lambda1 = new Array[Double](NumPartitions)
+  private[this] var lambda2 = new Array[Double](NumPartitions)
+  private[this] var lambda3 = new Array[Double](NumPartitions)
+
   def initialize(filePath: String) {
 
     val numLines = Source.fromFile(filePath, "utf-8").getLines.size
-    val partitionPoint = (numLines * TrainingDataPercent).toInt
+    val partitionPoint = (numLines * (1.0 - ValidationDataFraction)).toInt
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
 
@@ -69,10 +74,23 @@ class TrigramLanguageModel {
 
     }
 
+    0 to (NumPartitions - 1) foreach {
+      case i =>
+        val (lambda1bucketI, lambda2bucketI, lambda3bucketI) = emAlgorithm(cPrime, i)
+        lambda1(i) = lambda1bucketI
+        lambda2(i) = lambda2bucketI
+        lambda3(i) = lambda3bucketI
+    }
+
+  }
+
+  private[this] def emAlgorithm(cPrime: collection.mutable.Map[(String, String, String), Int],
+    bucket: Int): (Double, Double, Double) = {
+
     val random = new Random
-    lambda1 = random.nextDouble
-    lambda2 = random.nextDouble
-    lambda3 = 1 - (lambda1 + lambda2)
+    var lambda1 = random.nextDouble
+    var lambda2 = random.nextDouble
+    var lambda3 = 1 - (lambda1 + lambda2)
 
     var prevLambda1 = 0.0
     var prevLambda2 = 0.0
@@ -94,14 +112,16 @@ class TrigramLanguageModel {
       cPrime foreach {
         case ((word1, word2, word3), numOccurences) =>
 
-          val part1 = lambda1 * qML(word1, word2, word3)
-          val part2 = lambda2 * qML(word2, word3)
-          val part3 = lambda3 * qML(word3)
-          val denominator = part1 + part2 + part3
-          if (denominator != 0) {
-            count1 += ((numOccurences * part1) / denominator)
-            count2 += ((numOccurences * part2) / denominator)
-            count3 += ((numOccurences * part3) / denominator)
+          if (phi(word1, word2) == bucket) {
+            val part1 = lambda1 * qML(word1, word2, word3)
+            val part2 = lambda2 * qML(word2, word3)
+            val part3 = lambda3 * qML(word3)
+            val denominator = part1 + part2 + part3
+            if (denominator != 0) {
+              count1 += ((numOccurences * part1) / denominator)
+              count2 += ((numOccurences * part2) / denominator)
+              count3 += ((numOccurences * part3) / denominator)
+            }
           }
       }
 
@@ -118,7 +138,16 @@ class TrigramLanguageModel {
 
     println("TrigramLanguageModel EM time=" + (endEm - startEm) / 1000.0 + "s")
 
+    (lambda1, lambda2, lambda3)
   }
+
+  private[this] def phi(word1: String, word2: String): Int =
+    c2.getOrElse((word1, word2), 0) match {
+      case 0 => 0
+      case 1 | 2 => 1
+      case 3 | 4 | 5 => 2
+      case _ => 3
+    }
 
   def estimate(words: Seq[String]): Double = {
 
@@ -134,8 +163,9 @@ class TrigramLanguageModel {
   }
 
   private[this] def q(word1: String, word2: String, word3: String) = {
-    (lambda1 * qML(word1, word2, word3)) + (lambda2 * qML(word2, word3)) +
-      (lambda3 * qML(word1))
+    val bucket = phi(word1, word2)
+    (lambda1(bucket) * qML(word1, word2, word3)) + (lambda2(bucket) * qML(word2, word3)) +
+      (lambda3(bucket) * qML(word1))
   }
 
   private[this] def doublesAreEqual(d1: Double, d2: Double) = {
