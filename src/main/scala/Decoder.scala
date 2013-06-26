@@ -11,9 +11,31 @@ class Decoder(val lexicon: Lexicon,
   def decode(line: String): String = {
 
     val words = line split " "
-    val beams = new Array[Beam[State]](words.size)
+    val beams = new Array[Beam](words.size)
 
     ""
+  }
+
+  private[this] def ph(q: State, wordsLang1: Array[String]): collection.mutable.Set[Phrase] = {
+
+    val phrases = collection.mutable.Set[Phrase]()
+    //(r + 1) - d <= s <= (r + 1) + d
+    (q.prevEnd + 1 - distortionLimit) to (q.prevEnd + 1 + distortionLimit) dropWhile (_ < 0) takeWhile (_ < wordsLang1.size) foreach {
+      case start =>
+        var end = start
+        var overlap = false
+        while (end < wordsLang1.size && !overlap) {
+          val nextSet = q.bitString.nextSetBit(start)
+          if (nextSet == -1 || nextSet > end) {
+            phrases.add(new Phrase(start + 1, end + 1, wordsLang1.slice(start, end + 1)))
+          } else {
+            overlap = true
+          }
+          end += 1
+        }
+    }
+
+    phrases
   }
 
   private[this] def next(q: State, p: Phrase, wordsLang1: Array[String]): State = {
@@ -35,11 +57,30 @@ class Decoder(val lexicon: Lexicon,
 
 }
 
-class Beam[T] {
+class Beam(val width: Double) {
 
-  val min = -1
-  val set = collection.mutable.HashSet[T]()
+  var max = -1.0
+  val map = collection.mutable.Map[State, State]()
 
+  def add(q: State) {
+
+    val existing = map.getOrElse(q, null)
+    if (existing == null) {
+      map.put(q, q)
+    } else if (q.score > existing.score) {
+      map.remove(existing)
+      map.put(q, q)
+    }
+    if (q.score > max) {
+      max = q.score
+      purge()
+    }
+
+  }
+
+  private[this] def purge() {
+    map.retain((k, v) => k.score >= max - width)
+  }
 }
 
 //start and end are 1 indexed
