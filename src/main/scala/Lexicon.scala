@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class Lexicon {
 
-  private[this] val translatedPairs = new collection.mutable.HashSet[(Array[String], Array[String])]
+  private[this] val translatedPairs = new collection.mutable.HashMap[Array[String], Array[String]]
   private[this] val c2 = new collection.mutable.HashMap[(Array[String], Array[String]), Int]
   private[this] val c1 = new collection.mutable.HashMap[Array[String], Int]
 
@@ -92,6 +92,10 @@ class Lexicon {
   // TODO
   def estimate(wordsLang1: Array[String], wordsLang2: Array[String]): Double = {
     0.0
+  }
+
+  def getTranslation(wordsLang1: Array[String]): Array[String] = {
+    translatedPairs.getOrElse(wordsLang1, null)
   }
 
   private[this] def growAlignments(lang2FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
