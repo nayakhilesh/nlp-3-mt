@@ -5,30 +5,34 @@ import scala.compat.Platform
 import scala.io.Source
 import scala.util.Random
 
-class TrigramLanguageModel {
-
-  //uses Linear Interpolation with history partitions
+object TrigramLanguageModel {
 
   //constants
   val BeforeSymbol = "*"
   val AfterSymbol = "STOP"
-  val ValidationDataFraction = 0.05
-  private[this] val Epsilon = 10E-6
-  private[this] val NumPartitions = 4
+  private val ValidationDataFraction = 0.05
+  private val Epsilon = 10E-6
+  private val NumPartitions = 4
+
+}
+
+class TrigramLanguageModel {
+
+  //uses Linear Interpolation with history partitions
 
   //state
   private[this] val c1 = collection.mutable.Map[String, Int]()
   private[this] val c2 = collection.mutable.Map[(String, String), Int]()
   private[this] val c3 = collection.mutable.Map[(String, String, String), Int]()
   private[this] var totalNumWords = 0
-  private[this] var lambda1 = new Array[Double](NumPartitions)
-  private[this] var lambda2 = new Array[Double](NumPartitions)
-  private[this] var lambda3 = new Array[Double](NumPartitions)
+  private[this] var lambda1 = new Array[Double](TrigramLanguageModel.NumPartitions)
+  private[this] var lambda2 = new Array[Double](TrigramLanguageModel.NumPartitions)
+  private[this] var lambda3 = new Array[Double](TrigramLanguageModel.NumPartitions)
 
   def initialize(filePath: String) {
 
     val numLines = Source.fromFile(filePath, "utf-8").getLines.size
-    val partitionPoint = (numLines * (1.0 - ValidationDataFraction)).toInt
+    val partitionPoint = (numLines * (1.0 - TrigramLanguageModel.ValidationDataFraction)).toInt
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
 
@@ -41,7 +45,8 @@ class TrigramLanguageModel {
 
         val words = line split " "
         totalNumWords += words.size
-        val newWords = BeforeSymbol +: BeforeSymbol +: words :+ AfterSymbol
+        val newWords = TrigramLanguageModel.BeforeSymbol +: TrigramLanguageModel.BeforeSymbol +:
+          words :+ TrigramLanguageModel.AfterSymbol
 
         newWords sliding (3) foreach {
           case seq =>
@@ -62,7 +67,8 @@ class TrigramLanguageModel {
         if ((index + 1) % 200 == 0) println("line#:" + (index + 1))
 
         val words = line split " "
-        val newWords = BeforeSymbol +: BeforeSymbol +: words :+ AfterSymbol
+        val newWords = TrigramLanguageModel.BeforeSymbol +: TrigramLanguageModel.BeforeSymbol +:
+          words :+ TrigramLanguageModel.AfterSymbol
 
         newWords sliding (3) foreach {
           case seq =>
@@ -74,7 +80,7 @@ class TrigramLanguageModel {
 
     }
 
-    0 to (NumPartitions - 1) foreach {
+    0 to (TrigramLanguageModel.NumPartitions - 1) foreach {
       case i =>
         val (lambda1bucketI, lambda2bucketI, lambda3bucketI) = emAlgorithm(cPrime, i)
         lambda1(i) = lambda1bucketI
@@ -151,7 +157,8 @@ class TrigramLanguageModel {
 
   def estimate(words: Seq[String]): Double = {
 
-    val newWords = BeforeSymbol +: BeforeSymbol +: words :+ AfterSymbol
+    val newWords = TrigramLanguageModel.BeforeSymbol +: TrigramLanguageModel.BeforeSymbol +:
+      words :+ TrigramLanguageModel.AfterSymbol
 
     (newWords sliding (3)).foldLeft(0.0) {
       case (acc, seq) =>
@@ -169,7 +176,7 @@ class TrigramLanguageModel {
   }
 
   private[this] def doublesAreEqual(d1: Double, d2: Double) = {
-    math.abs(d1 - d2) < Epsilon
+    math.abs(d1 - d2) < TrigramLanguageModel.Epsilon
   }
 
   private[this] def qML(word1: String, word2: String, word3: String): Double = {
