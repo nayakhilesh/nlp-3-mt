@@ -49,7 +49,7 @@ class TrigramLanguageModel {
           words :+ TrigramLanguageModel.AfterSymbol
 
         newWords sliding (3) foreach {
-          case seq =>
+          seq =>
             val word1 = seq(0)
             val word2 = seq(1)
             val word3 = seq(2)
@@ -71,7 +71,7 @@ class TrigramLanguageModel {
           words :+ TrigramLanguageModel.AfterSymbol
 
         newWords sliding (3) foreach {
-          case seq =>
+          seq =>
             val word1 = seq(0)
             val word2 = seq(1)
             val word3 = seq(2)
@@ -81,7 +81,7 @@ class TrigramLanguageModel {
     }
 
     0 to (TrigramLanguageModel.NumPartitions - 1) foreach {
-      case i =>
+      i =>
         val (lambda1bucketI, lambda2bucketI, lambda3bucketI) = emAlgorithm(cPrime, i)
         lambda1(i) = lambda1bucketI
         lambda2(i) = lambda2bucketI
