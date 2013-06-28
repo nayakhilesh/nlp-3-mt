@@ -107,7 +107,7 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
 
   }
 
-  override def extractAlignments(line1: String, line2: String) = {
+  override def extractAlignments(line1: String, line2: String): List[Int] = {
 
     val list = collection.mutable.ListBuffer[Int]()
 
@@ -166,31 +166,36 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
     println("Reading params from file:")
 
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
-    var reachedTransition = false
+    val (translationParamsData, alignmentParamsData) =
+      (fileLines zipWithIndex) span { case (line, index) => !line.trim.isEmpty }
+    //alignmentParamsData has a newline at the beginning
 
-    (fileLines zipWithIndex) foreach {
+    translationParamsData foreach {
       case (line, index) =>
         if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
         if (!line.trim.isEmpty) {
           val tokens = line split " "
-          if (!reachedTransition) {
-            val word1 = tokens(0) intern
-            val word2 = tokens(1) intern
-            val prob = tokens(2).toDouble
-            if (translationParams.contains(word1))
-              translationParams(word1) += (word2 -> prob)
-            else
-              translationParams(word1) = collection.mutable.Map(word2 -> prob)
-          } else {
-            val index2 = tokens(0).toInt
-            val index1 = tokens(1).toInt
-            val size1 = tokens(2).toInt
-            val size2 = tokens(3).toInt
-            val prob = tokens(4).toDouble
-            alignmentParams((index2, index1, size1, size2)) = prob
-          }
-        } else {
-          reachedTransition = true
+          val word1 = tokens(0) intern
+          val word2 = tokens(1) intern
+          val prob = tokens(2).toDouble
+          if (translationParams.contains(word1))
+            translationParams(word1) += (word2 -> prob)
+          else
+            translationParams(word1) = collection.mutable.Map(word2 -> prob)
+        }
+    }
+
+    alignmentParamsData foreach {
+      case (line, index) =>
+        if ((index + 1) % 20000 == 0) println("line#:" + (index + 1))
+        if (!line.trim.isEmpty) {
+          val tokens = line split " "
+          val index2 = tokens(0).toInt
+          val index1 = tokens(1).toInt
+          val size1 = tokens(2).toInt
+          val size2 = tokens(3).toInt
+          val prob = tokens(4).toDouble
+          alignmentParams((index2, index1, size1, size2)) = prob
         }
     }
 
