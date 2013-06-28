@@ -5,7 +5,6 @@ import Utils.loopThroughFiles
 trait IbmModelLike {
 
   // TODO break up into atomic traits?
-  //computeParams
 
   def writeAlignments(input1FilePath: String, input2FilePath: String, outputFilePath: String) {
 
