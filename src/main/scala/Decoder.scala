@@ -23,11 +23,11 @@ class Decoder(val lexicon: Lexicon,
     val bp = collection.mutable.Map[State, (State, Phrase)]()
 
     0 to (n - 1) foreach {
-      case i =>
+      i =>
         beams(i).map.keys foreach {
-          case q =>
+          q =>
             ph(q, words) foreach {
-              case p =>
+              p =>
                 val q1 = next(q, p, words)
                 val j = q1.bitString.cardinality
                 add(beams(j), q1, q, p, bp)
@@ -47,27 +47,30 @@ class Decoder(val lexicon: Lexicon,
     follow(maxState).mkString(" ")
   }
 
-  private[this] def ph(q: State, wordsLang1: Array[String]): collection.mutable.Set[Phrase] = {
+  private[this] def ph(q: State, wordsLang1: Array[String]): collection.Set[Phrase] = {
 
     val phrases = collection.mutable.Set[Phrase]()
     //(r + 1) - d <= s <= (r + 1) + d
-    (q.prevEnd + 1 - distortionLimit) to (q.prevEnd + 1 + distortionLimit) dropWhile (_ < 0) takeWhile (_ < wordsLang1.size) foreach {
-      case start =>
-        var end = start
-        var overlap = false
-        while (end < wordsLang1.size && !overlap) {
-          val nextSet = q.bitString.nextSetBit(start)
-          if (nextSet == -1 || nextSet > end) {
-            val lang2Words = lexicon.getTranslation(wordsLang1.slice(start, end + 1))
-            if (lang2Words != null) {
-              phrases.add(new Phrase(start + 1, end + 1, lang2Words))
+    math.max((q.prevEnd + 1 - distortionLimit), 0) to
+      math.min((q.prevEnd + 1 + distortionLimit), wordsLang1.size - 1) foreach {
+        start =>
+          var end = start
+          var overlap = false
+          while (end < wordsLang1.size && !overlap) {
+            val nextSet = q.bitString.nextSetBit(start)
+            if (nextSet == -1 || nextSet > end) {
+              val lang2WordsSet = lexicon.getTranslation(wordsLang1.slice(start, end + 1))
+              if (lang2WordsSet != null) {
+                lang2WordsSet foreach (
+                  lang2Words =>
+                    phrases.add(new Phrase(start + 1, end + 1, lang2Words)))
+              }
+            } else {
+              overlap = true
             }
-          } else {
-            overlap = true
+            end += 1
           }
-          end += 1
-        }
-    }
+      }
 
     phrases
   }
@@ -77,11 +80,11 @@ class Decoder(val lexicon: Lexicon,
 
     val existing = beam.map.getOrElse(q1, null)
     if (existing == null) {
-      beam.map.put(q1, q1)
+      beam.map += (q1 -> q1)
       bp(q1) = (q -> p)
     } else if (q1.score > existing.score) {
-      beam.map.remove(existing)
-      beam.map.put(q1, q1)
+      beam.map -= existing
+      beam.map += (q1 -> q1)
       bp(q1) = (q -> p)
     }
     if (q1.score > beam.max) {
@@ -100,7 +103,7 @@ class Decoder(val lexicon: Lexicon,
     val newBitString = q.bitString.clone().asInstanceOf[BitSet]
     newBitString.set(p.lang1Start - 1, p.lang1End)
     val newPrevEnd = p.lang1End
-    val newScore = q.score + lexicon.estimate(wordsLang1, p.lang2Words) +
+    val newScore = q.score + lexicon.estimate(wordsLang1.slice(p.lang1Start - 1, p.lang1End), p.lang2Words) +
       languageModel.estimate(p.lang2Words) + (distortionPenalty * math.abs(q.prevEnd + 1 - p.lang1Start))
 
     new State(newWord1, newWord2, newBitString, newPrevEnd, newScore)
