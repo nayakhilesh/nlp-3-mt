@@ -73,7 +73,7 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
 
   }
 
-  override def extractAlignments(line1: String, line2: String) = {
+  override def extractAlignments(line1: String, line2: String): List[Int] = {
 
     val list = collection.mutable.ListBuffer[Int]()
     line2 split " " foreach { word2 =>

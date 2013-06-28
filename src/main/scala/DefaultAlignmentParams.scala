@@ -5,7 +5,8 @@ import Utils.loopThroughFiles
 
 trait DefaultAlignmentParams {
 
-  def getDefaultAlignmentParams(lang1FilePath: String, lang2FilePath: String) = {
+  def getDefaultAlignmentParams(lang1FilePath: String,
+    lang2FilePath: String): AlignmentParameters = {
 
     val alignmentParams = new AlignmentParameters
     val sentenceLengthPairs = collection.mutable.Set[(Int, Int)]()
@@ -18,9 +19,10 @@ trait DefaultAlignmentParams {
 
     })
 
-    sentenceLengthPairs foreach {
-      case (l, m) =>
-        println(".") // TODO change? (horizontal bar)
+    val size = sentenceLengthPairs.size
+    (sentenceLengthPairs zipWithIndex) foreach {
+      case ((l, m), index) =>
+        printf("\r%2d%", ((index + 1) * 100) / size)
         0 to l foreach (j =>
           1 to m foreach (i =>
             alignmentParams((j, i, l, m)) = 1.0 / (l + 1)))

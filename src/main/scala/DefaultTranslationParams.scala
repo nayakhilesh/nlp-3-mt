@@ -8,7 +8,8 @@ import Utils.loopThroughFiles
 
 trait DefaultTranslationParams {
 
-  def getDefaultTranslationParams(lang1FilePath: String, lang2FilePath: String) = {
+  def getDefaultTranslationParams(lang1FilePath: String,
+    lang2FilePath: String): TranslationParameters = {
 
     val n = getN(lang1FilePath, lang2FilePath)
     getUniformlyDistributedTranslationParams(lang1FilePath, lang2FilePath, n)
@@ -37,7 +38,7 @@ trait DefaultTranslationParams {
   }
 
   private[this] def getUniformlyDistributedTranslationParams(lang1FilePath: String, lang2FilePath: String,
-    n: collection.mutable.Map[String, collection.mutable.Set[String]]) = {
+    n: collection.mutable.Map[String, collection.mutable.Set[String]]): TranslationParameters = {
 
     val translationParams = new TranslationParameters
     val transParamEst = new TranslationParamEstimator
@@ -68,7 +69,8 @@ trait DefaultTranslationParams {
 
     val cache = collection.mutable.Map[String, Double]()
 
-    def estimate(word2: String, word1: String, n: collection.mutable.Map[String, collection.mutable.Set[String]]) = {
+    def estimate(word2: String, word1: String,
+      n: collection.mutable.Map[String, collection.mutable.Set[String]]): Double = {
       cache.getOrElseUpdate(word1, (1.0 / n(word1).size))
     }
   }
