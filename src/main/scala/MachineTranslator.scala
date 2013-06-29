@@ -36,9 +36,14 @@ class MachineTranslator {
       lexicon.add(lang1Alignments, lang2Alignments, line1, line2)
 
     })
-    
-    // TODO create trigram lang model (for f)
-    // TODO create decoder
+
+    val lang2Model = new TrigramLanguageModel
+    lang2Model initialize lang2FilePath
+
+    val decoder = new Decoder(lexicon, lang2Model, 4, -2.0, 5.0)
+
+    for (lang2Sentence <- io.Source.stdin.getLines)
+      println(decoder decode lang2Sentence)
 
   }
 

@@ -12,7 +12,7 @@ object TrigramLanguageModel {
   val AfterSymbol = "STOP"
   private val ValidationDataFraction = 0.05
   private val Epsilon = 10E-6
-  private val NumPartitions = 4
+  private val NumPartitions = 4 //determined by method phi
 
 }
 

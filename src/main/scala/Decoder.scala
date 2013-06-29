@@ -4,17 +4,14 @@ import scala.collection.mutable.PriorityQueue
 import java.util.BitSet
 import collection.mutable.ArrayBuffer
 
-class Decoder(val lexicon: Lexicon,
-  val languageModel: TrigramLanguageModel,
-  val distortionLimit: Int, val distortionPenalty: Double) {
-
-  val BeamWidth = 1.0
+class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
+  val distortionLimit: Int, val distortionPenalty: Double, val beamWidth: Double) {
 
   def decode(line: String): String = {
 
     val words = line split " "
     val n = words.size
-    val beams = ArrayBuffer.fill(n + 1)(new Beam(BeamWidth))
+    val beams = ArrayBuffer.fill(n + 1)(new Beam(beamWidth))
 
     val q0 = new State(TrigramLanguageModel.BeforeSymbol, TrigramLanguageModel.BeforeSymbol,
       new BitSet(n), 0, 0)
