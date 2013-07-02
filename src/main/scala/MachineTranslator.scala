@@ -40,7 +40,10 @@ class MachineTranslator {
     val lang2Model = new TrigramLanguageModel
     lang2Model initialize lang2FilePath
 
-    val decoder = new Decoder(lexicon, lang2Model, 4, -2.0, 5.0)
+    val distortionLimit = conf.getInt("machine-translator.decoder.distortion-limit")
+    val distortionPenalty = conf.getDouble("machine-translator.decoder.distortion-penalty")
+    val beamWidth = conf.getDouble("machine-translator.decoder.beam-width")
+    val decoder = new Decoder(lexicon, lang2Model, distortionLimit, distortionPenalty, beamWidth)
 
     for (lang2Sentence <- io.Source.stdin.getLines)
       println(decoder decode lang2Sentence)

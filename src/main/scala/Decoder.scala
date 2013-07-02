@@ -7,6 +7,9 @@ import collection.mutable.ArrayBuffer
 class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
   val distortionLimit: Int, val distortionPenalty: Double, val beamWidth: Double) {
 
+  println("Created decoder with distortionLimit=" + distortionLimit +
+    ", distortionPenalty=" + distortionPenalty + ", beamWidth=" + beamWidth)
+
   def decode(line: String): String = {
 
     val words = line split " "
