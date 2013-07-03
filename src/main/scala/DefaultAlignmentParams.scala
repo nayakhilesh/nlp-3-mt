@@ -13,11 +13,10 @@ trait DefaultAlignmentParams {
 
     println("Initializing alignmentParams:")
 
-    loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
-
-      sentenceLengthPairs += ((line1 split " ").size -> (line2 split " ").size)
-
-    })
+    loopThroughFiles(lang1FilePath, lang2FilePath) {
+      (line1, line2, index) =>
+        sentenceLengthPairs += ((line1 split " ").size -> (line2 split " ").size)
+    }
 
     val size = sentenceLengthPairs.size
     (sentenceLengthPairs zipWithIndex) foreach {

@@ -12,15 +12,14 @@ trait IbmModelLike {
 
     val outputFile = new java.io.FileWriter(outputFilePath)
 
-    loopThroughFiles(input1FilePath, input2FilePath)((line1: String, line2: String, index: Int) => {
-
-      val list = extractAlignments(line1, line2)
-      (list zipWithIndex) foreach {
-        case (maxIndex, index2) =>
-          outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
-      }
-
-    })
+    loopThroughFiles(input1FilePath, input2FilePath) {
+      (line1, line2, index) =>
+        val list = extractAlignments(line1, line2)
+        (list zipWithIndex) foreach {
+          case (maxIndex, index2) =>
+            outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
+        }
+    }
 
     outputFile.close()
 

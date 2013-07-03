@@ -53,34 +53,35 @@ class IbmModel2 extends IbmModelLike with DefaultTranslationParams with DefaultA
       val c3 = collection.mutable.Map[(Int, Int, Int), Double]()
       val c4 = collection.mutable.Map[(Int, Int, Int, Int), Double]()
 
-      loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
+      loopThroughFiles(lang1FilePath, lang2FilePath) {
+        (line1, line2, index) =>
 
-        val arr1 = line1 split " "
-        val size1 = arr1.size
-        val arr1WithIndex = NULL +: arr1 zipWithIndex
+          val arr1 = line1 split " "
+          val size1 = arr1.size
+          val arr1WithIndex = NULL +: arr1 zipWithIndex
 
-        val arr2WithIndex = line2 split " " zipWithIndex
-        val size2 = arr2WithIndex.size
+          val arr2WithIndex = line2 split " " zipWithIndex
+          val size2 = arr2WithIndex.size
 
-        arr2WithIndex foreach {
-          case (word2, index2) =>
+          arr2WithIndex foreach {
+            case (word2, index2) =>
 
-            val denom = (arr1WithIndex.foldLeft(0.0) {
-              case (acc, (word1, index1)) =>
-                acc + (alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2))
-            })
-            arr1WithIndex foreach {
-              case (word1, index1) =>
-                val delta = (alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)) / denom
-                c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
-                c1(word1) = c1.getOrElse(word1, 0.0) + delta
-                c4((index1, index2 + 1, size1, size2)) = c4.getOrElse((index1, index2 + 1, size1, size2), 0.0) + delta
-                c3((index2 + 1, size1, size2)) = c3.getOrElse((index2 + 1, size1, size2), 0.0) + delta
-            }
+              val denom = (arr1WithIndex.foldLeft(0.0) {
+                case (acc, (word1, index1)) =>
+                  acc + (alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2))
+              })
+              arr1WithIndex foreach {
+                case (word1, index1) =>
+                  val delta = (alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)) / denom
+                  c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
+                  c1(word1) = c1.getOrElse(word1, 0.0) + delta
+                  c4((index1, index2 + 1, size1, size2)) = c4.getOrElse((index1, index2 + 1, size1, size2), 0.0) + delta
+                  c3((index2 + 1, size1, size2)) = c3.getOrElse((index2 + 1, size1, size2), 0.0) + delta
+              }
 
-        }
+          }
 
-      })
+      }
 
       temp foreach {
         case (word1, word2) =>

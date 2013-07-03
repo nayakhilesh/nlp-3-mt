@@ -9,7 +9,7 @@ object Utils {
 
   val NULL = "NULL"
 
-  def loopThroughFiles(file1Path: String, file2Path: String)(funcToPerform: (String, String, Int) => _) {
+  def loopThroughFiles(file1Path: String, file2Path: String)(funcToPerform: (String, String, Int) => Unit) {
 
     val file1Lines = Source.fromFile(file1Path, "utf-8").getLines
     val file2Lines = Source.fromFile(file2Path, "utf-8").getLines

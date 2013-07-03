@@ -25,17 +25,17 @@ class MachineTranslator {
     initializeIbmModel2(lang2FilePath, lang1FilePath, lang2ParamsReadFile, lang2ParamsWriteFile, ibm2Lang2)
 
     val lexicon = new Lexicon
-    loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
+    loopThroughFiles(lang1FilePath, lang2FilePath) {
+      (line1, line2, index) =>
 
-      //each position has the index of the lang1 word it aligns to (starting from 0 <=> NULL)
-      val lang2Alignments = ibm2Lang1.extractAlignments(line1, line2)
+        //each position has the index of the lang1 word it aligns to (starting from 0 <=> NULL)
+        val lang2Alignments = ibm2Lang1.extractAlignments(line1, line2)
 
-      //each position has the index of the lang2 word it aligns to (starting from 0 <=> NULL)
-      val lang1Alignments = ibm2Lang2.extractAlignments(line2, line1)
+        //each position has the index of the lang2 word it aligns to (starting from 0 <=> NULL)
+        val lang1Alignments = ibm2Lang2.extractAlignments(line2, line1)
 
-      lexicon.add(lang1Alignments, lang2Alignments, line1, line2)
-
-    })
+        lexicon.add(lang1Alignments, lang2Alignments, line1, line2)
+    }
 
     val lang2Model = new TrigramLanguageModel
     lang2Model initialize lang2FilePath

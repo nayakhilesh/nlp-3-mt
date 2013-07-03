@@ -22,15 +22,14 @@ trait DefaultTranslationParams {
 
     println("Initializing 'n':")
 
-    loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
-
-      NULL +: (line1 split " ") foreach (word1 =>
-        if (n.contains(word1))
-          n(word1) ++= line2.split(" ")
-        else
-          n(word1) = collection.mutable.Set[String]() ++= line2.split(" "))
-
-    })
+    loopThroughFiles(lang1FilePath, lang2FilePath) {
+      (line1, line2, index) =>
+        NULL +: (line1 split " ") foreach (word1 =>
+          if (n.contains(word1))
+            n(word1) ++= line2.split(" ")
+          else
+            n(word1) = collection.mutable.Set[String]() ++= line2.split(" "))
+    }
 
     println("Done Initializing 'n'")
 
@@ -45,16 +44,15 @@ trait DefaultTranslationParams {
 
     println("Initializing translationParams:")
 
-    loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
-
-      NULL +: (line1 split " ") foreach (word1 =>
-        line2 split " " foreach (word2 =>
-          if (translationParams.contains(word1))
-            translationParams(word1) += (word2 -> transParamEst.estimate(word2, word1, n))
-          else
-            translationParams(word1) = collection.mutable.Map(word2 -> transParamEst.estimate(word2, word1, n))))
-
-    })
+    loopThroughFiles(lang1FilePath, lang2FilePath) {
+      (line1, line2, index) =>
+        NULL +: (line1 split " ") foreach (word1 =>
+          line2 split " " foreach (word2 =>
+            if (translationParams.contains(word1))
+              translationParams(word1) += (word2 -> transParamEst.estimate(word2, word1, n))
+            else
+              translationParams(word1) = collection.mutable.Map(word2 -> transParamEst.estimate(word2, word1, n))))
+    }
 
     println("Done Initializing translationParams")
 

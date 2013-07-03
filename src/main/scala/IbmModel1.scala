@@ -40,20 +40,19 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
       val c1 = collection.mutable.Map[String, Double]()
       val c2 = collection.mutable.Map[(String, String), Double]()
 
-      loopThroughFiles(lang1FilePath, lang2FilePath)((line1: String, line2: String, index: Int) => {
+      loopThroughFiles(lang1FilePath, lang2FilePath) {
+        (line1, line2, index) =>
+          line2 split " " foreach { word2 =>
 
-        line2 split " " foreach { word2 =>
+            val denom = (NULL +: (line1 split " ")).foldLeft(0.0)((acc, word1) => acc + translationParams(word1)(word2))
+            NULL +: (line1 split " ") foreach { word1 =>
+              val delta = translationParams(word1)(word2) / denom
+              c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
+              c1(word1) = c1.getOrElse(word1, 0.0) + delta
+            }
 
-          val denom = (NULL +: (line1 split " ")).foldLeft(0.0)((acc, word1) => acc + translationParams(word1)(word2))
-          NULL +: (line1 split " ") foreach { word1 =>
-            val delta = translationParams(word1)(word2) / denom
-            c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
-            c1(word1) = c1.getOrElse(word1, 0.0) + delta
           }
-
-        }
-
-      })
+      }
 
       temp foreach {
         case (word1, word2) =>
