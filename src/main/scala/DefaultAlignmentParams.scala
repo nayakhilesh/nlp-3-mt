@@ -19,9 +19,11 @@ trait DefaultAlignmentParams {
     }
 
     val size = sentenceLengthPairs.size
-    (sentenceLengthPairs zipWithIndex) foreach {
-      case ((l, m), index) =>
-        printf("\r%2d%", ((index + 1) * 100) / size)
+    var index = 1
+    sentenceLengthPairs foreach {
+      case (l, m) =>
+        printf("\r%3d%%", math.round((index * 100.0) / size))
+        index += 1
         0 to l foreach (j =>
           1 to m foreach (i =>
             alignmentParams((j, i, l, m)) = 1.0 / (l + 1)))
