@@ -8,6 +8,25 @@ class MachineTranslator {
 
   def initialize(conf: Config, lang1FilePath: String, lang2FilePath: String) {
 
+    val lexicon = buildLexicon(conf, lang1FilePath, lang2FilePath)
+
+    val lang2Model = new TrigramLanguageModel
+    lang2Model initialize lang2FilePath
+
+    val distortionLimit = conf.getInt("machine-translator.decoder.distortion-limit")
+    val distortionPenalty = conf.getDouble("machine-translator.decoder.distortion-penalty")
+    val beamWidth = conf.getDouble("machine-translator.decoder.beam-width")
+
+    val decoder = new Decoder(lexicon, lang2Model, distortionLimit, distortionPenalty, beamWidth)
+
+    for (lang2Sentence <- io.Source.stdin.getLines)
+      println(decoder decode lang2Sentence)
+
+  }
+
+  private[this] def buildLexicon(conf: Config, lang1FilePath: String,
+    lang2FilePath: String): Lexicon = {
+
     val lang1ParamsReadFile = conf.getString("machine-translator.lang1.params-read-file")
     val lang1ParamsWriteFile = conf.getString("machine-translator.lang1.params-write-file")
 
@@ -37,17 +56,7 @@ class MachineTranslator {
         lexicon.add(lang1Alignments, lang2Alignments, line1, line2)
     }
 
-    val lang2Model = new TrigramLanguageModel
-    lang2Model initialize lang2FilePath
-
-    val distortionLimit = conf.getInt("machine-translator.decoder.distortion-limit")
-    val distortionPenalty = conf.getDouble("machine-translator.decoder.distortion-penalty")
-    val beamWidth = conf.getDouble("machine-translator.decoder.beam-width")
-    val decoder = new Decoder(lexicon, lang2Model, distortionLimit, distortionPenalty, beamWidth)
-
-    for (lang2Sentence <- io.Source.stdin.getLines)
-      println(decoder decode lang2Sentence)
-
+    lexicon
   }
 
   private[this] def initializeIbmModel2(lang1FilePath: String, lang2FilePath: String,
