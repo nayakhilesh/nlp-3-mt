@@ -1,6 +1,7 @@
 package main.scala
 
 import scala.collection.mutable.ArrayBuffer
+import Utils.arrayToString
 
 class Lexicon {
 
@@ -65,7 +66,7 @@ class Lexicon {
       i =>
         val valueSeq = lang2FinalAlignments(i)
         if (valueSeq.size == 0 || valueSeq.exists { value => value < startLang1 || value > (startLang1 + lengthLang1) })
-          false
+          return false
     }
     true
 
