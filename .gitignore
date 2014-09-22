@@ -1,6 +1,5 @@
 .cache
 .settings/org.scala-ide.sdt.core.prefs
-.project
 bin
 dev.en
 dev.es
