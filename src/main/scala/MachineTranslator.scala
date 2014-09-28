@@ -21,8 +21,8 @@ class MachineTranslator {
     val decoder = new Decoder(lexicon, lang2Model, distortionLimit, distortionPenalty, beamWidth)
 
     println("Enter sentence for translation:")
-    for (lang2Sentence <- io.Source.stdin.getLines)
-      println(decoder decode lang2Sentence)
+    for (lang1Sentence <- io.Source.stdin.getLines)
+      println(decoder decode lang1Sentence)
 
   }
 

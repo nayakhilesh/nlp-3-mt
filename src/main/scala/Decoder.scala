@@ -1,8 +1,8 @@
 package main.scala
 
-import scala.collection.mutable.PriorityQueue
 import java.util.BitSet
 import collection.mutable.ArrayBuffer
+import collection.immutable.Seq
 
 class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
   val distortionLimit: Int, val distortionPenalty: Double, val beamWidth: Double) {
@@ -59,7 +59,7 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
           while (end < wordsLang1.size && !overlap) {
             val nextSet = q.bitString.nextSetBit(start)
             if (nextSet == -1 || nextSet > end) {
-              val lang2WordsSet = lexicon.getTranslation(wordsLang1.slice(start, end + 1))
+              val lang2WordsSet = lexicon.getTranslation(wordsLang1.slice(start, end + 1).toIndexedSeq)
               if (lang2WordsSet != null) {
                 lang2WordsSet foreach (
                   lang2Words =>
@@ -103,7 +103,7 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
     val newBitString = q.bitString.clone().asInstanceOf[BitSet]
     newBitString.set(p.lang1Start - 1, p.lang1End)
     val newPrevEnd = p.lang1End
-    val newScore = q.score + lexicon.estimate(wordsLang1.slice(p.lang1Start - 1, p.lang1End), p.lang2Words) +
+    val newScore = q.score + lexicon.estimate(wordsLang1.slice(p.lang1Start - 1, p.lang1End).toIndexedSeq, p.lang2Words) +
       languageModel.estimate(p.lang2Words) + (distortionPenalty * math.abs(q.prevEnd + 1 - p.lang1Start))
 
     new State(newWord1, newWord2, newBitString, newPrevEnd, newScore)
@@ -124,24 +124,42 @@ class Beam(val width: Double) {
 
 //start and end are 1 indexed
 //i.e. start..end (inclusive) in lang1 is translated as lang2Words
-class Phrase(val lang1Start: Int, val lang1End: Int, val lang2Words: Array[String])
+class Phrase(val lang1Start: Int, val lang1End: Int, val lang2Words: Seq[String]) extends Equals {
+
+  def canEqual(other: Any): Boolean = other.isInstanceOf[Phrase]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: Phrase =>
+      (that canEqual this) &&
+        lang1Start == that.lang1Start &&
+        lang1End == that.lang1End &&
+        lang2Words == that.lang2Words
+    case _ => false
+  }
+
+  override def hashCode(): Int = {
+    val state = Seq(lang1Start, lang1End, lang2Words)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
+  }
+}
 
 class State(val word1: String, val word2: String, val bitString: BitSet,
   val prevEnd: Int, val score: Double) extends Equals {
 
-  def canEqual(other: Any) = {
-    other.isInstanceOf[main.scala.State]
+  def canEqual(other: Any): Boolean = other.isInstanceOf[State]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: State =>
+      (that canEqual this) &&
+        word1 == that.word1 &&
+        word2 == that.word2 &&
+        bitString == that.bitString &&
+        prevEnd == that.prevEnd
+    case _ => false
   }
 
-  override def equals(other: Any) = {
-    other match {
-      case that: main.scala.State => that.canEqual(State.this) && word1 == that.word1 && word2 == that.word2 && bitString == that.bitString && prevEnd == that.prevEnd
-      case _ => false
-    }
-  }
-
-  override def hashCode() = {
-    val prime = 41
-    prime * (prime * (prime * (prime + word1.hashCode) + word2.hashCode) + bitString.hashCode) + prevEnd.hashCode
+  override def hashCode(): Int = {
+    val state = Seq(word1, word2, bitString, prevEnd)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 }

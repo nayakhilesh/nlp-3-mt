@@ -1,13 +1,13 @@
 package main.scala
 
 import scala.collection.mutable.ArrayBuffer
-import Utils.arrayToString
+import scala.collection.immutable.Seq
 
 class Lexicon {
 
-  private[this] val translatedPairs = collection.mutable.Map[Array[String], collection.mutable.Set[Array[String]]]()
-  private[this] val c2 = collection.mutable.Map[(Array[String], Array[String]), Int]()
-  private[this] val c1 = collection.mutable.Map[Array[String], Int]()
+  private[this] val translatedPairs = collection.mutable.Map[Seq[String], collection.mutable.Set[Seq[String]]]()
+  private[this] val c2 = collection.mutable.Map[(Seq[String], Seq[String]), Int]()
+  private[this] val c1 = collection.mutable.Map[Seq[String], Int]()
 
   def add(lang1Alignments: Seq[Int], lang2Alignments: Seq[Int], line1: String, line2: String) {
 
@@ -41,12 +41,14 @@ class Lexicon {
                       val phraseLang2 = words2.slice(startLang2, startLang2 + lengthLang2 + 1)
                       val phraseLang1 = words1.slice(startLang1, startLang1 + lengthLang1 + 1)
                       //println(arrayToString(phraseLang2) + "|" + arrayToString(phraseLang1))
-                      if (translatedPairs.contains(phraseLang1))
-                        translatedPairs(phraseLang1) += phraseLang2
+                      val phraseLang2Seq = phraseLang2.toIndexedSeq
+                      val phraseLang1Seq = phraseLang1.toIndexedSeq
+                      if (translatedPairs.contains(phraseLang1Seq))
+                        translatedPairs(phraseLang1Seq) += phraseLang2Seq
                       else
-                        translatedPairs += (phraseLang1 -> collection.mutable.Set[Array[String]](phraseLang2))
-                      c2(phraseLang2 -> phraseLang1) = c2.getOrElse((phraseLang2 -> phraseLang1), 0) + 1
-                      c1(phraseLang2) = c1.getOrElse(phraseLang2, 0) + 1
+                        translatedPairs += (phraseLang1Seq -> collection.mutable.Set[Seq[String]](phraseLang2Seq))
+                      c2(phraseLang2Seq -> phraseLang1Seq) = c2.getOrElse((phraseLang2Seq -> phraseLang1Seq), 0) + 1
+                      c1(phraseLang2Seq) = c1.getOrElse(phraseLang2Seq, 0) + 1
                       //g(e,f) = log c(f,e)/c(f)
                       //e to f translation
                     }
@@ -86,13 +88,13 @@ class Lexicon {
 
   //g(e,f) = log c(f,e)/c(f)
   //e to f translation
-  def estimate(wordsLang1: Array[String], wordsLang2: Array[String]): Double = {
+  def estimate(wordsLang1: Seq[String], wordsLang2: Seq[String]): Double = {
     if (!(c2.contains((wordsLang2 -> wordsLang1)) && c1.contains(wordsLang2)))
       0.0
     math.log(c2(wordsLang2 -> wordsLang1).toDouble / c1(wordsLang2))
   }
 
-  def getTranslation(wordsLang1: Array[String]): collection.Set[Array[String]] = {
+  def getTranslation(wordsLang1: Seq[String]): collection.Set[Seq[String]] = {
     translatedPairs.getOrElse(wordsLang1, null)
   }
 
@@ -140,7 +142,7 @@ class Lexicon {
   }
 
   private[this] def countNeighbours(row: Int, col: Int,
-    lang2FinalAlignments: IndexedSeq[Seq[Int]], lang1FinalAlignments: IndexedSeq[Seq[Int]]): Int = {
+    lang2FinalAlignments: IndexedSeq[collection.mutable.Seq[Int]], lang1FinalAlignments: IndexedSeq[collection.mutable.Seq[Int]]): Int = {
 
     var count = 0
 
