@@ -1,6 +1,7 @@
 .cache
 .settings/org.scala-ide.sdt.core.prefs
 bin
+out
 dev.en
 dev.es
 dev.key

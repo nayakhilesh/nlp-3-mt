@@ -3,6 +3,7 @@ package main.scala
 import com.typesafe.config.Config
 
 import Utils.loopThroughFiles
+import scala.compat.Platform
 
 class MachineTranslator {
 
@@ -19,6 +20,7 @@ class MachineTranslator {
 
     val decoder = new Decoder(lexicon, lang2Model, distortionLimit, distortionPenalty, beamWidth)
 
+    println("Enter sentence for translation:")
     for (lang2Sentence <- io.Source.stdin.getLines)
       println(decoder decode lang2Sentence)
 
@@ -44,6 +46,8 @@ class MachineTranslator {
     initializeIbmModel2(lang2FilePath, lang1FilePath, lang2ParamsReadFile, lang2ParamsWriteFile, ibm2Lang2)
 
     val lexicon = new Lexicon
+    println("Building lexicon...")
+    val startLexicon = Platform.currentTime
     loopThroughFiles(lang1FilePath, lang2FilePath) {
       (line1, line2, index) =>
 
@@ -55,6 +59,9 @@ class MachineTranslator {
 
         lexicon.add(lang1Alignments, lang2Alignments, line1, line2)
     }
+    val endLexicon = Platform.currentTime
+
+    println("Building lexicon time=" + (endLexicon - startLexicon) / 1000.0 + "s")
 
     lexicon
   }
