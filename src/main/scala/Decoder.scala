@@ -2,10 +2,10 @@ package main.scala
 
 import java.util.BitSet
 import collection.mutable.ArrayBuffer
-import collection.immutable.Seq
+import scala.collection.immutable.Seq
 
 class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
-  val distortionLimit: Int, val distortionPenalty: Double, val beamWidth: Double) {
+              val distortionLimit: Int, val distortionPenalty: Double, val beamWidth: Double) {
 
   println("Created decoder with distortionLimit=" + distortionLimit +
     ", distortionPenalty=" + distortionPenalty + ", beamWidth=" + beamWidth)
@@ -18,14 +18,14 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
 
     val q0 = new State(TrigramLanguageModel.BeforeSymbol, TrigramLanguageModel.BeforeSymbol,
       new BitSet(n), 0, 0)
-    beams(0).map.put(q0, q0)
+    beams(0).addState(q0)
 
     // back-pointers
     val bp = collection.mutable.Map[State, (State, Phrase)]()
 
     0 to (n - 1) foreach {
       i =>
-        beams(i).map.keys foreach {
+        beams(i).states foreach {
           q =>
             ph(q, words) foreach {
               p =>
@@ -36,21 +36,38 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
         }
     }
 
-    val keys = beams(n).map.keys
+    beams.reverseIterator.find(_.states.size > 0) match {
+      case None => "No translation found"
+      case Some(beam) =>
+        val maxState = beam.states maxBy (_.score)
 
-    if (keys.size == 0)
-      "No translation found"
-    else {
-      val maxState = keys maxBy (_.score)
+        def follow(q: State): collection.mutable.TreeSet[Phrase] =
+          bp.getOrElse(q, null) match {
+            case null => collection.mutable.TreeSet.empty(Phrase.sortByPosition)
+            case (q1, p) => follow(q1) + p
+          }
 
-      def follow(q: State): Array[String] =
-        bp.getOrElse(q, null) match {
-          case null => Array.empty[String]
-          case (q1, p) =>
-            follow(q1) ++ p.lang2Words
+        val phrases = follow(maxState)
+
+        val translatedLine = collection.mutable.StringBuilder.newBuilder
+
+        var index = 0
+        while (index < words.length) {
+          phrases find (p => (p.lang1Start <= index + 1) && (index + 1 <= p.lang1End)) match {
+            case None => translatedLine.append(words(index) + " ")
+              index += 1
+            case Some(phrase) => translatedLine.append(phrase.lang2Words.mkString(" ") + " ")
+              phrases.remove(phrase)
+              index = phrase.lang1End
+          }
         }
 
-      follow(maxState).mkString(" ")
+        // remove trailing space
+        if (translatedLine.length > 0) {
+          translatedLine.setLength(translatedLine.length - 1)
+        }
+
+        translatedLine.replaceAllLiterally("*", "").toString
     }
   }
 
@@ -60,38 +77,38 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
     //(r + 1) - d <= s <= (r + 1) + d
     math.max((q.prevEnd + 1 - distortionLimit), 0) to
       math.min((q.prevEnd + 1 + distortionLimit), wordsLang1.size - 1) foreach {
-        start =>
-          var end = start
-          var overlap = false
-          while (end < wordsLang1.size && !overlap) {
-            val nextSet = q.bitString.nextSetBit(start)
-            if (nextSet == -1 || nextSet > end) {
-              val lang2WordsSet = lexicon.getTranslation(wordsLang1.slice(start, end + 1).toIndexedSeq)
-              if (lang2WordsSet != null) {
-                lang2WordsSet foreach (
-                  lang2Words =>
-                    phrases.add(new Phrase(start + 1, end + 1, lang2Words)))
-              }
-            } else {
-              overlap = true
+      start =>
+        var end = start
+        var overlap = false
+        while (end < wordsLang1.size && !overlap) {
+          val nextSet = q.bitString.nextSetBit(start)
+          if (nextSet == -1 || nextSet > end) {
+            val lang2WordsSet = lexicon.getTranslation(wordsLang1.slice(start, end + 1).toIndexedSeq)
+            if (lang2WordsSet != null) {
+              lang2WordsSet foreach (
+                lang2Words =>
+                  phrases.add(new Phrase(start + 1, end + 1, lang2Words)))
             }
-            end += 1
+          } else {
+            overlap = true
           }
-      }
+          end += 1
+        }
+    }
 
     phrases
   }
 
   private[this] def add(beam: Beam, q1: State, q: State, p: Phrase,
-    bp: collection.mutable.Map[State, (State, Phrase)]) {
+                        bp: collection.mutable.Map[State, (State, Phrase)]) {
 
-    val existing = beam.map.getOrElse(q1, null)
+    val existing = beam.getStateOrElse(q1, null)
     if (existing == null) {
-      beam.map += (q1 -> q1)
+      beam.addState(q1)
       bp(q1) = (q -> p)
     } else if (q1.score > existing.score) {
-      beam.map -= existing
-      beam.map += (q1 -> q1)
+      beam.removeState(existing)
+      beam.addState(q1)
       bp(q1) = (q -> p)
     }
     if (q1.score > beam.max) {
@@ -121,12 +138,32 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
 class Beam(val width: Double) {
 
   var max = -1.0
-  val map = collection.mutable.Map[State, State]()
+  private[this] val map = collection.mutable.Map[State, State]()
+
+  def addState(state: State) {
+    map.put(state, state)
+  }
+
+  def removeState(state: State) {
+    map.remove(state)
+  }
+
+  def getStateOrElse(state: State, default: State) = {
+    map.getOrElse(state, null)
+  }
+
+  def states = map.keys
 
   def purge() {
     map.retain((k, v) => k.score >= max - width)
   }
 
+}
+
+object Phrase {
+  val sortByPosition = new Ordering[Phrase] {
+    def compare(o1: Phrase, o2: Phrase) = o1.lang1Start.compare(o2.lang1Start)
+  }
 }
 
 //start and end are 1 indexed
@@ -151,7 +188,7 @@ class Phrase(val lang1Start: Int, val lang1End: Int, val lang2Words: Seq[String]
 }
 
 class State(val word1: String, val word2: String, val bitString: BitSet,
-  val prevEnd: Int, val score: Double) extends Equals {
+            val prevEnd: Int, val score: Double) extends Equals {
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[State]
 
