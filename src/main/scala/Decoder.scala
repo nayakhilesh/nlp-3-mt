@@ -20,6 +20,7 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
       new BitSet(n), 0, 0)
     beams(0).map.put(q0, q0)
 
+    // back-pointers
     val bp = collection.mutable.Map[State, (State, Phrase)]()
 
     0 to (n - 1) foreach {
@@ -35,16 +36,22 @@ class Decoder(val lexicon: Lexicon, val languageModel: TrigramLanguageModel,
         }
     }
 
-    val maxState = beams(n).map.keys maxBy (_.score)
+    val keys = beams(n).map.keys
 
-    def follow(q: State): Array[String] =
-      bp.getOrElse(q, null) match {
-        case null => Array.empty[String]
-        case (q1, p) =>
-          follow(q1) ++ p.lang2Words
-      }
+    if (keys.size == 0)
+      "No translation found"
+    else {
+      val maxState = keys maxBy (_.score)
 
-    follow(maxState).mkString(" ")
+      def follow(q: State): Array[String] =
+        bp.getOrElse(q, null) match {
+          case null => Array.empty[String]
+          case (q1, p) =>
+            follow(q1) ++ p.lang2Words
+        }
+
+      follow(maxState).mkString(" ")
+    }
   }
 
   private[this] def ph(q: State, wordsLang1: Array[String]): collection.Set[Phrase] = {
