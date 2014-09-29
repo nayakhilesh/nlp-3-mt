@@ -1,14 +1,13 @@
 package main.scala
 
-import Utils.AlignmentParameters
-import Utils.loopThroughFiles
+import main.scala.Utils.{MutableAlignmentParameters, loopThroughFiles}
 
-trait DefaultAlignmentParams {
+object DefaultAlignmentParams {
 
   def getDefaultAlignmentParams(lang1FilePath: String,
-    lang2FilePath: String): AlignmentParameters = {
+                                lang2FilePath: String): MutableAlignmentParameters = {
 
-    val alignmentParams = new AlignmentParameters
+    val alignmentParams = new collection.mutable.HashMap[(Int, Int, Int, Int), Double]
     val sentenceLengthPairs = collection.mutable.Set[(Int, Int)]()
 
     println("Initializing alignmentParams:")

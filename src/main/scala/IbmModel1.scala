@@ -9,106 +9,84 @@ import scala.Array.canBuildFrom
 import scala.compat.Platform
 import scala.io.Source
 
-import Utils.NULL
-import Utils.TranslationParameters
-import Utils.loopThroughFiles
+import main.scala.Utils.{MutableTranslationParameters, NULL, TranslationParameters, loopThroughFiles}
 
-class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
+object IbmModel1 {
 
-  var translationParams: TranslationParameters = _
+  def apply(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
+            initialTranslationParams: MutableTranslationParameters = null) =
+    new IbmModel1(computeParams(lang1FilePath, lang2FilePath, numIterations, initialTranslationParams))
 
-  def computeParams(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
-    initialTranslationParams: TranslationParameters = null) {
+  def apply(filePath: String) =
+    new IbmModel1(readParams(filePath))
 
-    if (initialTranslationParams == null)
-      translationParams = getDefaultTranslationParams(lang1FilePath, lang2FilePath)
-    else
-      translationParams = initialTranslationParams
+  private[this] def computeParams(lang1FilePath: String, lang2FilePath: String, numIterations: Int,
+                                  initialTranslationParams: MutableTranslationParameters) = {
+
+    val translationParams =
+      if (initialTranslationParams == null)
+        DefaultTranslationParams.getDefaultTranslationParams(lang1FilePath, lang2FilePath)
+      else
+        initialTranslationParams
 
     val startEm = Platform.currentTime
 
     val temp = translationParams.toSeq.flatMap {
       case (word1, map) =>
-        map.foldLeft(List[(String, String)]()) { case (list, (word2, _)) => (word1, word2) +: list }
+        map.foldLeft(List[(String, String)]()) {
+          case (list, (word2, _)) => (word1, word2) +: list
+        }
     }
 
     println("also number of lang2|lang1 combinations in translationParams:" + temp.size)
 
-    1 to numIterations foreach { iter =>
-      println("Starting iteration #" + iter)
+    1 to numIterations foreach {
+      iter =>
+        println("Starting iteration #" + iter)
 
-      val c1 = collection.mutable.Map[String, Double]()
-      val c2 = collection.mutable.Map[(String, String), Double]()
+        val c1 = collection.mutable.Map[String, Double]()
+        val c2 = collection.mutable.Map[(String, String), Double]()
 
-      loopThroughFiles(lang1FilePath, lang2FilePath) {
-        (line1, line2, index) =>
-          line2 split " " foreach { word2 =>
+        loopThroughFiles(lang1FilePath, lang2FilePath) {
+          (line1, line2, index) =>
+            line2 split " " foreach {
+              word2 =>
 
-            val denom = (NULL +: (line1 split " ")).foldLeft(0.0)((acc, word1) => acc + translationParams(word1)(word2))
-            NULL +: (line1 split " ") foreach { word1 =>
-              val delta = translationParams(word1)(word2) / denom
-              c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
-              c1(word1) = c1.getOrElse(word1, 0.0) + delta
+                val denom = (NULL +: (line1 split " ")).foldLeft(0.0)((acc, word1) => acc + translationParams(word1)(word2))
+                NULL +: (line1 split " ") foreach {
+                  word1 =>
+                    val delta = translationParams(word1)(word2) / denom
+                    c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
+                    c1(word1) = c1.getOrElse(word1, 0.0) + delta
+                }
+
             }
+        }
 
-          }
-      }
+        temp foreach {
+          case (word1, word2) =>
+            translationParams(word1)(word2) = c2((word1, word2)) / c1(word1)
+        }
 
-      temp foreach {
-        case (word1, word2) =>
-          translationParams(word1)(word2) = c2((word1, word2)) / c1(word1)
-      }
-
-      println("Finished iteration #" + iter)
+        println("Finished iteration #" + iter)
     }
 
     println("number of lang1 words in translationParams:" + translationParams.size)
     println("number of lang2|lang1 combinations in translationParams:" +
-      translationParams.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
+      translationParams.foldLeft(0) {
+        case (acc, (_, map)) => acc + map.size
+      })
 
     val endEm = Platform.currentTime
 
     println("EM time=" + (endEm - startEm) / 1000.0 + "s")
 
+    translationParams.toMap
   }
 
-  override def extractAlignments(line1: String, line2: String): List[Int] = {
+  private[this] def readParams(filePath: String) = {
 
-    val list = collection.mutable.ListBuffer[Int]()
-    line2 split " " foreach { word2 =>
-
-      val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
-        case (word1, index1) => translationParams(word1)(word2)
-      }
-      list += maxIndex
-
-    }
-
-    list.toList
-  }
-
-  override def writeParams(outputFilePath: String) {
-
-    println("Writing params to file")
-
-    val out = new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(new File(outputFilePath)), "UTF8"))
-
-    translationParams.foreach {
-      case (word1, map) =>
-        map.foreach { case (word2, prob) => out.write(word1 + " " + word2 + " " + prob + "\n") }
-    }
-
-    out.flush()
-    out.close()
-
-    println("Done Writing params to file")
-
-  }
-
-  override def readParams(filePath: String) {
-
-    translationParams = new TranslationParameters
+    val translationParams = new collection.mutable.HashMap[String, collection.mutable.Map[String, Double]]
 
     println("Reading params from file:")
 
@@ -132,7 +110,51 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
     println("Done Reading params from file")
     println("number of lang1 words in translationParams:" + translationParams.size)
     println("number of lang2|lang1 combinations in translationParams:" +
-      translationParams.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
+      translationParams.foldLeft(0) {
+        case (acc, (_, map)) => acc + map.size
+      })
+
+    translationParams.toMap
+  }
+
+}
+
+class IbmModel1(val translationParams: TranslationParameters) extends IbmModelLike {
+
+  override def extractAlignments(line1: String, line2: String): List[Int] = {
+
+    val list = collection.mutable.ListBuffer[Int]()
+    line2 split " " foreach {
+      word2 =>
+
+        val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
+          case (word1, index1) => translationParams(word1)(word2)
+        }
+        list += maxIndex
+
+    }
+
+    list.toList
+  }
+
+  override def writeParams(outputFilePath: String) {
+
+    println("Writing params to file")
+
+    val out = new BufferedWriter(new OutputStreamWriter(
+      new FileOutputStream(new File(outputFilePath)), "UTF8"))
+
+    translationParams.foreach {
+      case (word1, map) =>
+        map.foreach {
+          case (word2, prob) => out.write(word1 + " " + word2 + " " + prob + "\n")
+        }
+    }
+
+    out.flush()
+    out.close()
+
+    println("Done Writing params to file")
 
   }
 

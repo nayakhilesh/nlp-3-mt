@@ -31,6 +31,4 @@ trait IbmModelLike {
 
   def writeParams(filePath: String)
 
-  def readParams(filePath: String)
-
 }

@@ -37,7 +37,9 @@ class TrigramLanguageModel {
     val fileLines = Source.fromFile(filePath, "utf-8").getLines
 
     val (trainingData, validationData) =
-      (fileLines zipWithIndex) span { case (line, index) => index < partitionPoint }
+      (fileLines zipWithIndex) span {
+        case (line, index) => index < partitionPoint
+      }
 
     trainingData foreach {
       case (line, index) =>
@@ -91,7 +93,7 @@ class TrigramLanguageModel {
   }
 
   private[this] def emAlgorithm(cPrime: collection.mutable.Map[(String, String, String), Int],
-    bucket: Int): (Double, Double, Double) = {
+                                bucket: Int): (Double, Double, Double) = {
 
     val random = new Random
     var lambda1 = random.nextDouble

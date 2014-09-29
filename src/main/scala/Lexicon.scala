@@ -5,9 +5,9 @@ import scala.collection.immutable.Seq
 
 class Lexicon {
 
-  private[this] val translatedPairs = collection.mutable.Map[Seq[String], collection.mutable.Set[Seq[String]]]()
-  private[this] val c2 = collection.mutable.Map[(Seq[String], Seq[String]), Int]()
-  private[this] val c1 = collection.mutable.Map[Seq[String], Int]()
+  private[this] val translatedPairs = collection.concurrent.TrieMap.empty[Seq[String], collection.mutable.Set[Seq[String]]]
+  private[this] val c2 = collection.concurrent.TrieMap.empty[(Seq[String], Seq[String]), Int]
+  private[this] val c1 = collection.concurrent.TrieMap.empty[Seq[String], Int]
 
   def add(lang1Alignments: Seq[Int], lang2Alignments: Seq[Int], line1: String, line2: String) {
 
@@ -61,13 +61,15 @@ class Lexicon {
   }
 
   private[this] def isConsistent(startLang2: Int, lengthLang2: Int,
-    startLang1: Int, lengthLang1: Int,
-    lang2FinalAlignments: ArrayBuffer[ArrayBuffer[Int]]): Boolean = {
+                                 startLang1: Int, lengthLang1: Int,
+                                 lang2FinalAlignments: ArrayBuffer[ArrayBuffer[Int]]): Boolean = {
 
     (startLang2 to (startLang2 + lengthLang2)) foreach {
       i =>
         val valueSeq = lang2FinalAlignments(i)
-        if (valueSeq.size == 0 || valueSeq.exists { value => value < startLang1 || value > (startLang1 + lengthLang1) })
+        if (valueSeq.size == 0 || valueSeq.exists {
+          value => value < startLang1 || value > (startLang1 + lengthLang1)
+        })
           return false
     }
     true
@@ -75,7 +77,7 @@ class Lexicon {
   }
 
   private[this] def findAlignmentIntersection(lang2Alignments: Seq[Int], lang1Alignments: Seq[Int],
-    lang2FinalAlignments: ArrayBuffer[ArrayBuffer[Int]]) {
+                                              lang2FinalAlignments: ArrayBuffer[ArrayBuffer[Int]]) {
 
     (lang2Alignments zipWithIndex) foreach {
       case (lang1Index, lang2Index) =>
@@ -99,8 +101,8 @@ class Lexicon {
   }
 
   private[this] def growAlignments(lang2FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
-    lang1FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
-    lang2Alignments: Seq[Int], lang1Alignments: Seq[Int]) {
+                                   lang1FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
+                                   lang2Alignments: Seq[Int], lang1Alignments: Seq[Int]) {
 
     (lang2FinalAlignments zipWithIndex) foreach {
       case (lang1Seq, index2) =>
@@ -142,7 +144,7 @@ class Lexicon {
   }
 
   private[this] def countNeighbours(row: Int, col: Int,
-    lang2FinalAlignments: IndexedSeq[collection.mutable.Seq[Int]], lang1FinalAlignments: IndexedSeq[collection.mutable.Seq[Int]]): Int = {
+                                    lang2FinalAlignments: IndexedSeq[collection.mutable.Seq[Int]], lang1FinalAlignments: IndexedSeq[collection.mutable.Seq[Int]]): Int = {
 
     var count = 0
 

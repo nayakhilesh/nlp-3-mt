@@ -2,14 +2,12 @@ package main.scala
 
 import scala.Array.canBuildFrom
 
-import Utils.NULL
-import Utils.TranslationParameters
-import Utils.loopThroughFiles
+import main.scala.Utils.{MutableTranslationParameters, NULL, loopThroughFiles}
 
-trait DefaultTranslationParams {
+object DefaultTranslationParams {
 
   def getDefaultTranslationParams(lang1FilePath: String,
-    lang2FilePath: String): TranslationParameters = {
+                                  lang2FilePath: String): MutableTranslationParameters = {
 
     val n = getN(lang1FilePath, lang2FilePath)
     getUniformlyDistributedTranslationParams(lang1FilePath, lang2FilePath, n)
@@ -37,9 +35,9 @@ trait DefaultTranslationParams {
   }
 
   private[this] def getUniformlyDistributedTranslationParams(lang1FilePath: String, lang2FilePath: String,
-    n: collection.mutable.Map[String, collection.mutable.Set[String]]): TranslationParameters = {
+                                                             n: collection.mutable.Map[String, collection.mutable.Set[String]]): MutableTranslationParameters = {
 
-    val translationParams = new TranslationParameters
+    val translationParams = new collection.mutable.HashMap[String, collection.mutable.Map[String, Double]]
     val transParamEst = new TranslationParamEstimator
 
     println("Initializing translationParams:")
@@ -58,17 +56,19 @@ trait DefaultTranslationParams {
 
     println("number of lang1 words in translationParams:" + translationParams.size)
     println("number of lang2|lang1 combinations in translationParams:" +
-      translationParams.foldLeft(0) { case (acc, (_, map)) => acc + map.size })
+      translationParams.foldLeft(0) {
+        case (acc, (_, map)) => acc + map.size
+      })
 
     translationParams
   }
 
   class TranslationParamEstimator {
 
-    val cache = collection.mutable.Map[String, Double]()
+    private[this] val cache = collection.mutable.Map[String, Double]()
 
     def estimate(word2: String, word1: String,
-      n: collection.mutable.Map[String, collection.mutable.Set[String]]): Double = {
+                 n: collection.mutable.Map[String, collection.mutable.Set[String]]): Double = {
       cache.getOrElseUpdate(word1, (1.0 / n(word1).size))
     }
   }
