@@ -10,6 +10,7 @@ import scala.compat.Platform
 import scala.io.Source
 
 import main.scala.Utils.{MutableTranslationParameters, NULL, TranslationParameters, loopThroughFiles}
+import scala.collection.immutable
 
 object IbmModel1 {
 
@@ -121,7 +122,7 @@ object IbmModel1 {
 
 class IbmModel1(val translationParams: TranslationParameters) extends IbmModelLike {
 
-  override def extractAlignments(line1: String, line2: String): List[Int] = {
+  override def extractAlignments(line1: String, line2: String): immutable.Seq[Int] = {
 
     val list = collection.mutable.ListBuffer[Int]()
     line2 split " " foreach {
@@ -134,7 +135,7 @@ class IbmModel1(val translationParams: TranslationParameters) extends IbmModelLi
 
     }
 
-    list.toList
+    list.toVector
   }
 
   override def writeParams(outputFilePath: String) {

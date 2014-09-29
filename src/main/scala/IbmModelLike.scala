@@ -1,6 +1,7 @@
 package main.scala
 
 import Utils.loopThroughFiles
+import scala.collection.immutable
 
 trait IbmModelLike {
 
@@ -14,8 +15,8 @@ trait IbmModelLike {
 
     loopThroughFiles(input1FilePath, input2FilePath) {
       (line1, line2, index) =>
-        val list = extractAlignments(line1, line2)
-        (list zipWithIndex) foreach {
+        val seq = extractAlignments(line1, line2)
+        (seq zipWithIndex) foreach {
           case (maxIndex, index2) =>
             outputFile.write((index + 1) + " " + maxIndex + " " + (index2 + 1) + "\n")
         }
@@ -27,7 +28,7 @@ trait IbmModelLike {
 
   }
 
-  def extractAlignments(line1: String, line2: String): List[Int]
+  def extractAlignments(line1: String, line2: String): immutable.Seq[Int]
 
   def writeParams(filePath: String)
 

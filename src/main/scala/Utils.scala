@@ -21,7 +21,7 @@ object Utils {
     val iterator = file1Lines zip file2Lines zipWithIndex
 
     if (parallel) {
-      val chunkSize = 10
+      val chunkSize = 100
       val chunkedIterator = iterator.grouped(chunkSize)
       chunkedIterator.foreach(lines => processLines(lines.par, funcToPerform, false))
     } else {

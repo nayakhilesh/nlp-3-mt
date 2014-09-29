@@ -10,6 +10,7 @@ import scala.compat.Platform
 import scala.io.Source
 
 import main.scala.Utils._
+import scala.collection.immutable
 
 object IbmModel2 {
 
@@ -179,14 +180,12 @@ class IbmModel2(private[this] val params: (TranslationParameters, AlignmentParam
   val translationParams = params._1
   val alignmentParams = params._2
 
-  override def extractAlignments(line1: String, line2: String): List[Int] = {
-
-    val list = collection.mutable.ListBuffer[Int]()
+  override def extractAlignments(line1: String, line2: String): immutable.Seq[Int] = {
 
     val arr2WithIndex = line2 split " " zipWithIndex
     val size2 = arr2WithIndex.size
 
-    arr2WithIndex foreach {
+    val mappedArray = arr2WithIndex.par map {
       case (word2, index2) =>
 
         val arr1 = line1 split " "
@@ -197,11 +196,10 @@ class IbmModel2(private[this] val params: (TranslationParameters, AlignmentParam
           case (word1, index1) => alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)
         }
 
-        list += maxIndex
-
+        maxIndex
     }
 
-    list.toList
+    mappedArray.toVector
   }
 
   override def writeParams(outputFilePath: String) {
