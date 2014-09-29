@@ -92,15 +92,15 @@ class IbmModel1 extends IbmModelLike with DefaultTranslationParams {
     println("Writing params to file")
 
     val out = new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream(new File(outputFilePath)), "UTF8"));
+      new FileOutputStream(new File(outputFilePath)), "UTF8"))
 
     translationParams.foreach {
       case (word1, map) =>
         map.foreach { case (word2, prob) => out.write(word1 + " " + word2 + " " + prob + "\n") }
     }
 
-    out.flush();
-    out.close();
+    out.flush()
+    out.close()
 
     println("Done Writing params to file")
 

@@ -9,9 +9,7 @@ class MachineTranslator(private[this] val conf: Config,
                         private[this] val lang1FilePath: String,
                         private[this] val lang2FilePath: String) {
 
-  val decoder = initialize(conf, lang1FilePath, lang2FilePath)
-
-  private[this] def initialize(conf: Config, lang1FilePath: String, lang2FilePath: String) = {
+  val decoder = {
 
     val lexicon = buildLexicon(conf, lang1FilePath, lang2FilePath)
 
