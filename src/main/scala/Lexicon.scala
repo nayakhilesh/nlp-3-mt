@@ -79,7 +79,7 @@ class Lexicon {
   private[this] def findAlignmentIntersection(lang2Alignments: Seq[Int], lang1Alignments: Seq[Int],
                                               lang2FinalAlignments: ArrayBuffer[ArrayBuffer[Int]]) {
 
-    (lang2Alignments zipWithIndex) foreach {
+    lang2Alignments.iterator.zipWithIndex foreach {
       case (lang1Index, lang2Index) =>
         if (lang1Index > 0 && lang1Alignments(lang1Index - 1) == lang2Index + 1)
           lang2FinalAlignments += (ArrayBuffer[Int]() += lang1Index - 1)
@@ -104,7 +104,7 @@ class Lexicon {
                                    lang1FinalAlignments: IndexedSeq[ArrayBuffer[Int]],
                                    lang2Alignments: Seq[Int], lang1Alignments: Seq[Int]) {
 
-    (lang2FinalAlignments zipWithIndex) foreach {
+    lang2FinalAlignments.iterator.zipWithIndex foreach {
       case (lang1Seq, index2) =>
         if (lang1Seq.size == 0) {
 
@@ -116,7 +116,7 @@ class Lexicon {
 
           var count1 = -1
           var row1 = 0
-          (lang1Alignments zipWithIndex) foreach {
+          lang1Alignments.iterator.zipWithIndex foreach {
             case (lang2Index, index1) =>
               if (lang2Index - 1 == index2) {
                 val tempCount = countNeighbours(index1, index2, lang2FinalAlignments, lang1FinalAlignments)

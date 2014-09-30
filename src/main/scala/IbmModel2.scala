@@ -66,19 +66,19 @@ object IbmModel2 {
 
             val arr1 = line1 split " "
             val size1 = arr1.size
-            val arr1WithIndex = NULL +: arr1 zipWithIndex
+            val nullPrefixedArr1 = NULL +: arr1
 
-            val arr2WithIndex = line2 split " " zipWithIndex
-            val size2 = arr2WithIndex.size
+            val arr2 = line2 split " "
+            val size2 = arr2.size
 
-            arr2WithIndex foreach {
+            arr2.iterator.zipWithIndex foreach {
               case (word2, index2) =>
 
-                val denom = (arr1WithIndex.foldLeft(0.0) {
+                val denom = nullPrefixedArr1.iterator.zipWithIndex.foldLeft(0.0) {
                   case (acc, (word1, index1)) =>
                     acc + (alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2))
-                })
-                arr1WithIndex foreach {
+                }
+                nullPrefixedArr1.iterator.zipWithIndex foreach {
                   case (word1, index1) =>
                     val delta = (alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)) / denom
                     c2((word1, word2)) = c2.getOrElse((word1, word2), 0.0) + delta
@@ -182,17 +182,16 @@ class IbmModel2(private[this] val params: (TranslationParameters, AlignmentParam
 
   override def extractAlignments(line1: String, line2: String): immutable.Seq[Int] = {
 
-    val arr2WithIndex = line2 split " " zipWithIndex
-    val size2 = arr2WithIndex.size
+    val arr2 = line2 split " "
+    val size2 = arr2.size
 
-    val mappedArray = arr2WithIndex.par map {
+    val mappedArray = arr2.iterator.zipWithIndex map {
       case (word2, index2) =>
 
         val arr1 = line1 split " "
         val size1 = arr1.size
-        val arr1WithIndex = NULL +: arr1 zipWithIndex
 
-        val (_, maxIndex) = arr1WithIndex.maxBy {
+        val (_, maxIndex) = (NULL +: arr1).iterator.zipWithIndex.maxBy {
           case (word1, index1) => alignmentParams((index1, index2 + 1, size1, size2)) * translationParams(word1)(word2)
         }
 

@@ -128,7 +128,7 @@ class IbmModel1(val translationParams: TranslationParameters) extends IbmModelLi
     line2 split " " foreach {
       word2 =>
 
-        val (_, maxIndex) = ((NULL +: (line1 split " ")) zipWithIndex).maxBy {
+        val (_, maxIndex) = ((NULL +: (line1 split " ")).iterator.zipWithIndex).maxBy {
           case (word1, index1) => translationParams(word1)(word2)
         }
         list += maxIndex
